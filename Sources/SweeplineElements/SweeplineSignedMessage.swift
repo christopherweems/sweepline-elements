@@ -1,7 +1,7 @@
 public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 
-public enum SweeplineHeader: String, Sendable {
+public enum SweeplineHeader: String, CaseIterable, Sendable {
     case signatureAlgorithm = "X-Sweepline-Signature-Algorithm"
     case keyID = "X-Sweepline-Key-ID"
     case publicKey = "X-Sweepline-Public-Key"
@@ -42,12 +42,22 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
     }
     
     public init(headers: [String: String]) throws {
-        let normalizedHeaders = Dictionary(
-            headers.map { key, value in
-                (key.lowercased(), value)
-            },
-            uniquingKeysWith: { first, _ in first }
-        )
+        var normalizedHeaders: [String: String] = [:]
+        let sweeplineHeaderNames = Set(SweeplineHeader.allCases.map { $0.rawValue.lowercased() })
+        
+        for (key, value) in headers {
+            let normalizedKey = key.lowercased()
+            guard sweeplineHeaderNames.contains(normalizedKey) else {
+                normalizedHeaders[normalizedKey] = value
+                continue
+            }
+            
+            guard normalizedHeaders[normalizedKey] == nil else {
+                throw SweeplineSignedMessageHeaderError.duplicateHeader(normalizedKey)
+            }
+            
+            normalizedHeaders[normalizedKey] = value
+        }
         
         let signatureAlgorithm = try Self.headerValue(
             for: .signatureAlgorithm,
@@ -99,6 +109,7 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
 
 public enum SweeplineSignedMessageHeaderError: Error, Hashable, Sendable {
     case missingHeader(SweeplineHeader)
+    case duplicateHeader(String)
     case invalidKeyID(String)
     
 }

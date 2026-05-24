@@ -118,6 +118,18 @@ import Testing
     }
 }
 
+@Test func signedMessageRejectsDuplicateNormalizedSweeplineHeader() {
+    #expect(throws: SweeplineSignedMessageHeaderError.duplicateHeader("x-sweepline-key-id")) {
+        try SweeplineSignedMessage(headers: [
+            SweeplineHeader.signatureAlgorithm.rawValue: "ed25519",
+            SweeplineHeader.keyID.rawValue: "abcdef0123456789",
+            SweeplineHeader.keyID.rawValue.lowercased(): "0000000000000000",
+            SweeplineHeader.publicKey.rawValue: "public-key",
+            SweeplineHeader.signature.rawValue: "signature",
+        ])
+    }
+}
+
 @Test func keyIDRejectsInvalidRawValues() {
     #expect(SweeplineKeyID(rawValue: "wrong") == nil)
     #expect(SweeplineKeyID(rawValue: "ABCDEF0123456789") == nil)
