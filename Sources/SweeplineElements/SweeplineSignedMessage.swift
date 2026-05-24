@@ -1,5 +1,5 @@
-public import protocol Foundation.ContiguousBytes
-/* private */ import struct Foundation.Data
+public import protocol Foundation::ContiguousBytes
+/* private */ import struct Foundation::Data
 
 public enum SweeplineHeader: String, Sendable {
     case signatureAlgorithm = "X-Sweepline-Signature-Algorithm"

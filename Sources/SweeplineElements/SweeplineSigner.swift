@@ -1,4 +1,4 @@
-public import protocol Foundation.ContiguousBytes
+public import protocol Foundation::ContiguousBytes
 
 public struct SweeplineSigner: Sendable { }
 

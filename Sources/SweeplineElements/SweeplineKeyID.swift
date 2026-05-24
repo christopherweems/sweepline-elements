@@ -1,5 +1,5 @@
-public import protocol Foundation.ContiguousBytes
-/* private */ import struct Foundation.Data
+public import protocol Foundation::ContiguousBytes
+/* private */ import struct Foundation::Data
 private import Crypto
 
 public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
@@ -11,6 +11,7 @@ public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
         }
         
         self.rawValue = rawValue
+        
     }
     
     public init(publicKeyRawRepresentation: some ContiguousBytes) {

@@ -1,4 +1,4 @@
-import struct Foundation.Data
+public import struct Foundation::Data
 private import Crypto
 
 public struct SweeplineVerifier: Sendable {
