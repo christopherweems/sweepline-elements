@@ -2,12 +2,13 @@
 
 Swift types for reading, verifying, and producing Sweepline protocol messages.
 
-Primarily for Sweepline server implementers. `sweepline-elements` keeps the wire-format details in one place: request JSON keys, signature header names, Ed25519 verification, and public-key fingerprinting. It could easily help you write your own Sweepline client too.
+Written to help you get your Sweepline endpoint validating and responding to requests, `sweepline-elements` keeps the wire-format details in one place: request JSON keys, signature header names, Ed25519 verification, and public-key fingerprinting. 
 
+App developers: `sweepline-elements` could be useful in your Sweepline client (iOS, Windows Phone, Chromebook – and we're looking for a solid Android implementation to point people to).
 
-## What It Covers
+## The Protocol
 
-Sweepline clients send a JSON request body plus four signature headers:
+Sweepline clients send a JSON request body via HTTP POST plus four signature headers:
 
 ```http
 X-Sweepline-Signature-Algorithm: ed25519
@@ -15,6 +16,8 @@ X-Sweepline-Key-ID: <16-character-key-id>
 X-Sweepline-Public-Key: <base64-raw-ed25519-public-key>
 X-Sweepline-Signature: <base64-ed25519-signature>
 ```
+
+## The Package
 
 `SweeplineElements` provides:
 
