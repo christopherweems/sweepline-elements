@@ -176,5 +176,3 @@ let signedMessage = SweeplineSigner.signedMessage(
 
 let headers = signedMessage.headers
 ```
-
-`SweeplineElements` intentionally does not generate or store private keys.
