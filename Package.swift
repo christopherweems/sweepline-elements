@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SweeplineElements",
+    name: "sweepline-elements",
     platforms: [
         .macOS(.v10_15),
         .iOS(.v13),
