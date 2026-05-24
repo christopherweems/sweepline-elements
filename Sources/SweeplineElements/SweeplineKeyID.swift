@@ -24,12 +24,12 @@ public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
     }
     
     private static func isValid(_ rawValue: String) -> Bool {
-        guard rawValue.count == 16 else {
+        guard rawValue.utf8.count == 16 else {
             return false
         }
         
-        return rawValue.allSatisfy { character in
-            character.isNumber || ("a"..."f").contains(character)
+        return rawValue.utf8.allSatisfy { byte in
+            (48...57).contains(byte) || (97...102).contains(byte)
         }
     }
     

@@ -121,6 +121,7 @@ import Testing
 @Test func keyIDRejectsInvalidRawValues() {
     #expect(SweeplineKeyID(rawValue: "wrong") == nil)
     #expect(SweeplineKeyID(rawValue: "ABCDEF0123456789") == nil)
+    #expect(SweeplineKeyID(rawValue: "abcdef012345678\u{0661}") == nil)
     #expect(SweeplineKeyID(rawValue: "abcdef0123456789")?.rawValue == "abcdef0123456789")
 }
 
