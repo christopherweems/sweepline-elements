@@ -8,7 +8,7 @@ App developers: `sweepline-elements` could be useful in your Sweepline client (i
 
 ## The Protocol
 
-Sweepline clients send a JSON request body via HTTP POST plus four signature headers:
+Sweepline clients send a JSON request body (see `Request Payload`) via HTTP POST plus four signature headers:
 
 ```http
 X-Sweepline-Signature-Algorithm: ed25519
@@ -178,6 +178,7 @@ let headers = signedMessage.headers
 ```
 
 
-## Questions, Comments, Concerns (This could have been a pull request)
+## Questions, Comments, Concerns 
+### (This could have been a pull request?)
 
 https://christopherweems.com/contact
