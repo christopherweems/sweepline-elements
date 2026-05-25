@@ -87,7 +87,7 @@ A Sweepline request contains exactly one verb key. Current request bodies use ei
   "idempotency-id": "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
   "sender-id": "kobe-bryant",
   "zone-id": "staples-center",
-  "duration-held": 0.81
+  "duration-held": 81.00
 }
 ```
 
