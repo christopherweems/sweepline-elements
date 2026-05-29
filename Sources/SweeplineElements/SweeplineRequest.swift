@@ -2,6 +2,8 @@ public import struct Foundation::Date
 public import struct Foundation::TimeInterval
 
 public enum SweeplineVerb: Hashable, Sendable {
+    // tap/release
+    case tap
     // yes/no
     case yes
     // down/up
@@ -18,6 +20,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
     public let senderID: String?
     public let zoneID: String?
     public let durationHeld: TimeInterval?
+    public let isFirstContact: Bool?
     
     public init(
         verb: SweeplineVerb,
@@ -27,6 +30,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         senderID: String? = nil,
         zoneID: String? = nil,
         durationHeld: TimeInterval? = nil,
+        isFirstContact: Bool? = nil,
     ) {
         self.verb = verb
         self.value = value
@@ -35,10 +39,12 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         self.senderID = senderID
         self.zoneID = zoneID
         self.durationHeld = durationHeld
+        self.isFirstContact = isFirstContact
         
     }
     
     enum CodingKeys: String, CodingKey {
+        case isTap = "is-tap"
         case isYes = "is-yes"
         case isDown = "is-down"
         case date
@@ -46,37 +52,42 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         case senderID = "sender-id"
         case zoneID = "zone-id"
         case durationHeld = "duration-held"
+        case isFirstContact = "is-first-contact"
         
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let tapValue = try container.decodeIfPresent(Bool.self, forKey: .isTap)
         let yesValue = try container.decodeIfPresent(Bool.self, forKey: .isYes)
         let downValue = try container.decodeIfPresent(Bool.self, forKey: .isDown)
+        let verbValues: [(SweeplineVerb, Bool, CodingKeys)] = [
+            (.tap, tapValue, .isTap),
+            (.yes, yesValue, .isYes),
+            (.down, downValue, .isDown),
+        ].compactMap { verb, value, key in
+            value.map { (verb, $0, key) }
+        }
         
-        switch (yesValue, downValue) {
-        case (.some(let value), .none):
-            self.verb = .yes
-            self.value = value
+        switch verbValues.count {
+        case 1:
+            self.verb = verbValues[0].0
+            self.value = verbValues[0].1
             
-        case (.none, .some(let value)):
-            self.verb = .down
-            self.value = value
-            
-        case (.some, .some):
-            throw DecodingError.dataCorruptedError(
-                forKey: .isDown,
-                in: container,
-                debugDescription: "Sweepline request must contain only one verb key."
-            )
-            
-        case (.none, .none):
+        case 0:
             throw DecodingError.keyNotFound(
                 CodingKeys.isYes,
                 DecodingError.Context(
                     codingPath: container.codingPath,
-                    debugDescription: "Sweepline request must contain either is-yes or is-down."
+                    debugDescription: "Sweepline request must contain one of is-tap, is-yes, or is-down."
                 )
+            )
+            
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: verbValues[1].2,
+                in: container,
+                debugDescription: "Sweepline request must contain only one verb key."
             )
             
         }
@@ -86,6 +97,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         self.senderID = try container.decodeIfPresent(String.self, forKey: .senderID)
         self.zoneID = try container.decodeIfPresent(String.self, forKey: .zoneID)
         self.durationHeld = try container.decodeIfPresent(TimeInterval.self, forKey: .durationHeld)
+        self.isFirstContact = try container.decodeIfPresent(Bool.self, forKey: .isFirstContact)
         
     }
     
@@ -93,6 +105,8 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         switch verb {
+        case .tap:
+            try container.encode(value, forKey: .isTap)
         case .yes:
             try container.encode(value, forKey: .isYes)
         case .down:
@@ -104,6 +118,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         try container.encodeIfPresent(senderID, forKey: .senderID)
         try container.encodeIfPresent(zoneID, forKey: .zoneID)
         try container.encodeIfPresent(durationHeld, forKey: .durationHeld)
+        try container.encodeIfPresent(isFirstContact, forKey: .isFirstContact)
         
     }
     

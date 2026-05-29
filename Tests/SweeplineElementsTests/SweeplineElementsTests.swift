@@ -193,8 +193,28 @@ import Testing
     #expect(request.idempotencyID == "down")
 }
 
+@Test func decodesRequestUsingIsTapKey() throws {
+    let data = Data(#"{"is-tap":true,"date":0,"idempotency-id":"tap"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let request = try decoder.decode(SweeplineRequest.self, from: data)
+
+    #expect(request.verb == .tap)
+    #expect(request.value)
+    #expect(request.idempotencyID == "tap")
+}
+
+@Test func decodesRequestWithIsFirstContact() throws {
+    let data = Data(#"{"is-yes":true,"date":0,"idempotency-id":"first-contact","is-first-contact":true}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let request = try decoder.decode(SweeplineRequest.self, from: data)
+
+    #expect(request.isFirstContact == true)
+}
+
 @Test func rejectsRequestWithMultipleVerbKeys() throws {
-    let data = Data(#"{"is-yes":true,"is-down":false,"date":0,"idempotency-id":"ambiguous"}"#.utf8)
+    let data = Data(#"{"is-tap":true,"is-yes":true,"is-down":false,"date":0,"idempotency-id":"ambiguous"}"#.utf8)
     let decoder = JSONDecoder()
 
     #expect(throws: DecodingError.self) {
@@ -214,6 +234,52 @@ import Testing
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     #expect(object["is-down"] as? Bool == true)
+    #expect(object["is-tap"] == nil)
     #expect(object["is-yes"] == nil)
     #expect(object["idempotency-id"] as? String == "encoded")
+}
+
+@Test func encodesRequestUsingIsTapKey() throws {
+    let request = SweeplineRequest(
+        verb: .tap,
+        value: true,
+        date: Date(timeIntervalSince1970: 0),
+        idempotencyID: "encoded-tap"
+    )
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(request)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["is-tap"] as? Bool == true)
+    #expect(object["is-yes"] == nil)
+    #expect(object["is-down"] == nil)
+}
+
+@Test func encodesRequestWithIsFirstContact() throws {
+    let request = SweeplineRequest(
+        verb: .yes,
+        value: true,
+        date: Date(timeIntervalSince1970: 0),
+        idempotencyID: "encoded-first-contact",
+        isFirstContact: true
+    )
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(request)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["is-first-contact"] as? Bool == true)
+}
+
+@Test func omitsNilIsFirstContact() throws {
+    let request = SweeplineRequest(
+        verb: .yes,
+        value: true,
+        date: Date(timeIntervalSince1970: 0),
+        idempotencyID: "encoded-without-first-contact"
+    )
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(request)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["is-first-contact"] == nil)
 }

@@ -78,7 +78,7 @@ func handleSweeplineRequest(
 
 ## Request Payload
 
-A Sweepline request contains exactly one verb key. Current request bodies use either `is-yes` or `is-down`:
+A Sweepline request contains exactly one verb key. Current request bodies use `is-tap`, `is-yes`, or `is-down`:
 
 ```json
 {
@@ -87,21 +87,24 @@ A Sweepline request contains exactly one verb key. Current request bodies use ei
   "idempotency-id": "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
   "sender-id": "kobe-bryant",
   "zone-id": "staples-center",
-  "duration-held": 81.00
+  "duration-held": 81.00,
+  "is-first-contact": true
 }
 ```
 
 Fields:
 
+- `is-tap`: Boolean tap/release state. Present when `verb == .tap`.
 - `is-yes`: Boolean yes/no state. Present when `verb == .yes`.
 - `is-down`: Boolean down/up state. Present when `verb == .down`.
 - `date`: Client timestamp.
 - `idempotency-id`: Client-generated idempotency token. Servers should use this for replay/idempotency handling.
 - `sender-id`: Optional client sender identifier.
 - `zone-id`: Optional endpoint zone identifier.
-- `duration-held`: Optional hold duration in seconds.
+- `duration-held` (*): Optional hold duration in seconds.
+- `is-first-contact` (*): Optional flag set when this request is the sender's first contact with the endpoint.
 
-`SweeplineRequest` rejects payloads with both `is-yes` and `is-down`, and also rejects payloads with neither verb key.
+`SweeplineRequest` rejects payloads with more than one of `is-tap`, `is-yes`, or `is-down`, and also rejects payloads with no verb key.
 
 
 ## Signature Contract
