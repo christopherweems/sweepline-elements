@@ -35,7 +35,7 @@ It does not own server routing, replay protection, authorization, key storage po
 Add the package to your server target:
 
 ```swift
-.package(url: "https://github.com/christopherweems/sweepline-elements.git", from: "0.1.0")
+.package(url: "https://github.com/christopherweems/sweepline-elements.git", from: "0.1.4")
 ```
 
 Then add the product dependency:
