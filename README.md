@@ -110,12 +110,12 @@ Fields:
 
 ## Response Payload
 
-An endpoint response identifies the protocol version and the contact mode the endpoint wants clients to use:
+An endpoint response identifies the protocol version and exactly one contact signal:
 
 ```json
 {
   "sweepline-version": "1.1",
-  "contact-mode": "tap",
+  "is-yes": true,
   "destination-url": "https://example.com/contact"
 }
 ```
@@ -123,7 +123,9 @@ An endpoint response identifies the protocol version and the contact mode the en
 Fields:
 
 - `sweepline-version`: Protocol version. `SweeplineResponse` currently supports `1.1`.
-- `contact-mode`: Contact mode. Supported values are `tap`, `yes`, and `down`.
+- `contact-mode`: Optional contact lane. Required as `"tap"` for tap responses; for `yes` and `down`, it may be included when it matches the value specifier.
+- `is-yes`: Boolean yes/no state. Present when `contactMode == .yes`.
+- `is-down`: Boolean down/up state. Present when `contactMode == .down`.
 - `destination-url`: Optional landing URL for client to present after server's acknowledgement of gesture.
 
 
