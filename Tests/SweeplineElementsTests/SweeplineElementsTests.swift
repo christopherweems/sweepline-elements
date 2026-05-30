@@ -284,7 +284,7 @@ import Testing
     #expect(object["is-first-contact"] == nil)
 }
 
-@Test func decodesResponseUsingSweeplineKeys() throws {
+@Test func decodesTapResponseUsingContactMode() throws {
     let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap","destination-url":"https://example.com/contact"}"#.utf8)
     let decoder = JSONDecoder()
 
@@ -292,12 +292,59 @@ import Testing
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .tap)
+    #expect(response.value)
     #expect(response.destinationURL == "https://example.com/contact")
 }
 
-@Test func encodesResponseUsingSweeplineKeys() throws {
+@Test func decodesYesResponseUsingIsYesKey() throws {
+    let data = Data(#"{"sweepline-version":"1.1","is-yes":true,"destination-url":"https://example.com/yes"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .yes)
+    #expect(response.value)
+    #expect(response.destinationURL == "https://example.com/yes")
+}
+
+@Test func decodesYesResponseUsingMatchingContactModeAndIsYesKey() throws {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes","is-yes":false}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .yes)
+    #expect(!response.value)
+}
+
+@Test func decodesDownResponseUsingIsDownKey() throws {
+    let data = Data(#"{"sweepline-version":"1.1","is-down":false}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .down)
+    #expect(!response.value)
+}
+
+@Test func decodesDownResponseUsingMatchingContactModeAndIsDownKey() throws {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"down","is-down":true}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .down)
+    #expect(response.value)
+}
+
+@Test func encodesYesResponseUsingIsYesKey() throws {
     let response = SweeplineResponse(
         contactMode: .yes,
+        value: true,
         destinationURL: "https://example.com/yes"
     )
     let encoder = JSONEncoder()
@@ -305,19 +352,88 @@ import Testing
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     #expect(object["sweepline-version"] as? String == "1.1")
-    #expect(object["contact-mode"] as? String == "yes")
+    #expect(object["is-yes"] as? Bool == true)
+    #expect(object["is-down"] == nil)
+    #expect(object["contact-mode"] == nil)
+    #expect(object["value"] == nil)
     #expect(object["destination-url"] as? String == "https://example.com/yes")
 }
 
-@Test func omitsNilResponseOptionals() throws {
-    let response = SweeplineResponse(contactMode: .down)
+@Test func encodesTapResponseWithoutValueKey() throws {
+    let response = SweeplineResponse(
+        contactMode: .tap,
+        value: true,
+        destinationURL: "https://example.com/tap"
+    )
     let encoder = JSONEncoder()
     let data = try encoder.encode(response)
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     #expect(object["sweepline-version"] as? String == "1.1")
-    #expect(object["contact-mode"] as? String == "down")
+    #expect(object["contact-mode"] as? String == "tap")
+    #expect(object["is-yes"] == nil)
+    #expect(object["is-down"] == nil)
+    #expect(object["value"] == nil)
+    #expect(object["destination-url"] as? String == "https://example.com/tap")
+}
+
+@Test func encodesDownResponseUsingIsDownKey() throws {
+    let response = SweeplineResponse(contactMode: .down, value: false)
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(response)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["sweepline-version"] as? String == "1.1")
+    #expect(object["is-down"] as? Bool == false)
+    #expect(object["is-yes"] == nil)
+    #expect(object["contact-mode"] == nil)
+    #expect(object["value"] == nil)
     #expect(object["destination-url"] == nil)
+}
+
+@Test func rejectsResponseMissingContactKey() {
+    let data = Data(#"{"sweepline-version":"1.1"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
+}
+
+@Test func rejectsResponseWithMultipleValueSpecifiers() {
+    let data = Data(#"{"sweepline-version":"1.1","is-yes":true,"is-down":false}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
+}
+
+@Test func rejectsResponseWithMismatchedContactModeAndValueSpecifier() {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes","is-down":true}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
+}
+
+@Test func rejectsResponseWithContactModeMissingValueSpecifier() {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
+}
+
+@Test func rejectsTapResponseWithValueSpecifier() {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap","is-yes":true}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
 }
 
 @Test func rejectsResponseWithUnknownContactMode() {
