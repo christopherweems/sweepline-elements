@@ -283,3 +283,61 @@ import Testing
 
     #expect(object["is-first-contact"] == nil)
 }
+
+@Test func decodesResponseUsingSweeplineKeys() throws {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap","is-first-contact":true,"destination-url":"https://example.com/contact"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .tap)
+    #expect(response.isFirstContact == true)
+    #expect(response.destinationURL == "https://example.com/contact")
+}
+
+@Test func encodesResponseUsingSweeplineKeys() throws {
+    let response = SweeplineResponse(
+        contactMode: .yes,
+        isFirstContact: true,
+        destinationURL: "https://example.com/yes"
+    )
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(response)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["sweepline-version"] as? String == "1.1")
+    #expect(object["contact-mode"] as? String == "yes")
+    #expect(object["is-first-contact"] as? Bool == true)
+    #expect(object["destination-url"] as? String == "https://example.com/yes")
+}
+
+@Test func omitsNilResponseOptionals() throws {
+    let response = SweeplineResponse(contactMode: .down)
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(response)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["sweepline-version"] as? String == "1.1")
+    #expect(object["contact-mode"] as? String == "down")
+    #expect(object["is-first-contact"] == nil)
+    #expect(object["destination-url"] == nil)
+}
+
+@Test func rejectsResponseWithUnknownContactMode() {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"maybe"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
+}
+
+@Test func rejectsResponseWithUnknownSweeplineVersion() {
+    let data = Data(#"{"sweepline-version":"2.0","contact-mode":"tap"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineResponse.self, from: data)
+    }
+}

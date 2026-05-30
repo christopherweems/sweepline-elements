@@ -24,6 +24,7 @@ X-Sweepline-Signature: <base64-ed25519-signature>
 - `SweeplineSignedMessage` for parsing and emitting signature metadata.
 - `SweeplineVerifier` for verifying a signed request body.
 - `SweeplineRequest` for decoding the request JSON payload.
+- `SweeplineResponse` for encoding and decoding endpoint response JSON.
 - `SweeplineKeyID` for the shared key ID derivation algorithm.
 - `SweeplineHeader` for the canonical HTTP header names.
 
@@ -105,6 +106,27 @@ Fields:
 - `is-first-contact` (*): Optional flag set when this request is the sender's first contact with the endpoint.
 
 `SweeplineRequest` rejects payloads with more than one of `is-tap`, `is-yes`, or `is-down`, and also rejects payloads with no verb key.
+
+
+## Response Payload
+
+An endpoint response identifies the protocol version and the contact mode the endpoint wants clients to use:
+
+```json
+{
+  "sweepline-version": "1.1",
+  "contact-mode": "tap",
+  "is-first-contact": true,
+  "destination-url": "https://example.com/contact"
+}
+```
+
+Fields:
+
+- `sweepline-version`: Protocol version. `SweeplineResponse` currently supports `1.1`.
+- `contact-mode`: Contact mode. Supported values are `tap`, `yes`, and `down`.
+- `is-first-contact`: Optional flag set when this response represents the sender's first contact with the endpoint.
+- `destination-url`: Optional landing URL for client to present after server's acknowledgement of gesture.
 
 
 ## Signature Contract
