@@ -1,13 +1,13 @@
 public struct SweeplineResponse: Hashable, Sendable {
     public let version: SweeplineVersion
     public let contactMode: SweeplineContactMode
-    public let value: Bool
+    public let value: Bool?
     public let destinationURL: String?
     
     public init(
         version: SweeplineVersion = .v1_1,
         contactMode: SweeplineContactMode,
-        value: Bool,
+        value: Bool?,
         destinationURL: String? = nil,
     ) {
         precondition(contactMode != .tap || value == true, "tap value must be true")
@@ -34,13 +34,17 @@ extension SweeplineResponse : Encodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encode(version, forKey: .version)
-        switch contactMode {
-        case .tap:
+        switch (contactMode, value) {
+        case (.tap, _):
             try container.encode(contactMode, forKey: .contactMode)
-        case .yes:
+        case (.yes, .some(let value)):
             try container.encode(value, forKey: .isYes)
-        case .down:
+        case (.yes, .none):
+            try container.encode(contactMode, forKey: .contactMode)
+        case (.down, .some(let value)):
             try container.encode(value, forKey: .isDown)
+        case (.down, .none):
+            try container.encode(contactMode, forKey: .contactMode)
         }
         try container.encodeIfPresent(destinationURL, forKey: .destinationURL)
         
@@ -91,22 +95,12 @@ extension SweeplineResponse : Decodable {
             self.value = value
             
         case (.some(.yes), .none, .none):
-            throw DecodingError.keyNotFound(
-                CodingKeys.isYes,
-                DecodingError.Context(
-                    codingPath: container.codingPath,
-                    debugDescription: "Sweepline yes responses must contain is-yes."
-                )
-            )
+            self.contactMode = .yes
+            self.value = nil
             
         case (.some(.down), .none, .none):
-            throw DecodingError.keyNotFound(
-                CodingKeys.isDown,
-                DecodingError.Context(
-                    codingPath: container.codingPath,
-                    debugDescription: "Sweepline down responses must contain is-down."
-                )
-            )
+            self.contactMode = .down
+            self.value = nil
             
         case (.some(.yes), .none, .some), (.some(.down), .some, .none):
             throw DecodingError.dataCorruptedError(

@@ -292,7 +292,7 @@ import Testing
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .tap)
-    #expect(response.value)
+    #expect(response.value == true)
     #expect(response.destinationURL == "https://example.com/contact")
 }
 
@@ -304,7 +304,7 @@ import Testing
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .yes)
-    #expect(response.value)
+    #expect(response.value == true)
     #expect(response.destinationURL == "https://example.com/yes")
 }
 
@@ -316,7 +316,18 @@ import Testing
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .yes)
-    #expect(!response.value)
+    #expect(response.value == false)
+}
+
+@Test func decodesLaneOnlyYesResponse() throws {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .yes)
+    #expect(response.value == nil)
 }
 
 @Test func decodesDownResponseUsingIsDownKey() throws {
@@ -327,7 +338,7 @@ import Testing
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .down)
-    #expect(!response.value)
+    #expect(response.value == false)
 }
 
 @Test func decodesDownResponseUsingMatchingContactModeAndIsDownKey() throws {
@@ -338,7 +349,18 @@ import Testing
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .down)
-    #expect(response.value)
+    #expect(response.value == true)
+}
+
+@Test func decodesLaneOnlyDownResponse() throws {
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"down"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let response = try decoder.decode(SweeplineResponse.self, from: data)
+
+    #expect(response.version == .v1_1)
+    #expect(response.contactMode == .down)
+    #expect(response.value == nil)
 }
 
 @Test func encodesYesResponseUsingIsYesKey() throws {
@@ -391,6 +413,30 @@ import Testing
     #expect(object["destination-url"] == nil)
 }
 
+@Test func encodesLaneOnlyYesResponseUsingContactMode() throws {
+    let response = SweeplineResponse(contactMode: .yes, value: nil)
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(response)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["sweepline-version"] as? String == "1.1")
+    #expect(object["contact-mode"] as? String == "yes")
+    #expect(object["is-yes"] == nil)
+    #expect(object["is-down"] == nil)
+}
+
+@Test func encodesLaneOnlyDownResponseUsingContactMode() throws {
+    let response = SweeplineResponse(contactMode: .down, value: nil)
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(response)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["sweepline-version"] as? String == "1.1")
+    #expect(object["contact-mode"] as? String == "down")
+    #expect(object["is-yes"] == nil)
+    #expect(object["is-down"] == nil)
+}
+
 @Test func rejectsResponseMissingContactKey() {
     let data = Data(#"{"sweepline-version":"1.1"}"#.utf8)
     let decoder = JSONDecoder()
@@ -411,15 +457,6 @@ import Testing
 
 @Test func rejectsResponseWithMismatchedContactModeAndValueSpecifier() {
     let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes","is-down":true}"#.utf8)
-    let decoder = JSONDecoder()
-
-    #expect(throws: DecodingError.self) {
-        try decoder.decode(SweeplineResponse.self, from: data)
-    }
-}
-
-@Test func rejectsResponseWithContactModeMissingValueSpecifier() {
-    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes"}"#.utf8)
     let decoder = JSONDecoder()
 
     #expect(throws: DecodingError.self) {
