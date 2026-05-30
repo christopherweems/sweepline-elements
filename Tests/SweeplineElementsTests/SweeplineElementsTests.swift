@@ -285,21 +285,19 @@ import Testing
 }
 
 @Test func decodesResponseUsingSweeplineKeys() throws {
-    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap","is-first-contact":true,"destination-url":"https://example.com/contact"}"#.utf8)
+    let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap","destination-url":"https://example.com/contact"}"#.utf8)
     let decoder = JSONDecoder()
 
     let response = try decoder.decode(SweeplineResponse.self, from: data)
 
     #expect(response.version == .v1_1)
     #expect(response.contactMode == .tap)
-    #expect(response.isFirstContact == true)
     #expect(response.destinationURL == "https://example.com/contact")
 }
 
 @Test func encodesResponseUsingSweeplineKeys() throws {
     let response = SweeplineResponse(
         contactMode: .yes,
-        isFirstContact: true,
         destinationURL: "https://example.com/yes"
     )
     let encoder = JSONEncoder()
@@ -308,7 +306,6 @@ import Testing
 
     #expect(object["sweepline-version"] as? String == "1.1")
     #expect(object["contact-mode"] as? String == "yes")
-    #expect(object["is-first-contact"] as? Bool == true)
     #expect(object["destination-url"] as? String == "https://example.com/yes")
 }
 
@@ -320,7 +317,6 @@ import Testing
 
     #expect(object["sweepline-version"] as? String == "1.1")
     #expect(object["contact-mode"] as? String == "down")
-    #expect(object["is-first-contact"] == nil)
     #expect(object["destination-url"] == nil)
 }
 

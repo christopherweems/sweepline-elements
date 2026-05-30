@@ -116,7 +116,6 @@ An endpoint response identifies the protocol version and the contact mode the en
 {
   "sweepline-version": "1.1",
   "contact-mode": "tap",
-  "is-first-contact": true,
   "destination-url": "https://example.com/contact"
 }
 ```
@@ -125,7 +124,6 @@ Fields:
 
 - `sweepline-version`: Protocol version. `SweeplineResponse` currently supports `1.1`.
 - `contact-mode`: Contact mode. Supported values are `tap`, `yes`, and `down`.
-- `is-first-contact`: Optional flag set when this response represents the sender's first contact with the endpoint.
 - `destination-url`: Optional landing URL for client to present after server's acknowledgement of gesture.
 
 
