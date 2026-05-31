@@ -123,10 +123,10 @@ An endpoint response identifies the protocol version and exactly one contact sig
 Fields:
 
 - `sweepline-version`: Protocol version. `SweeplineResponse` currently supports `1.1`.
-- `contact-mode`: Optional contact lane. Required as `"tap"` for tap responses; for `yes` and `down`, it may be included when it matches the value specifier.
-- `is-yes`: Boolean yes/no state. Present when `contactMode == .yes`.
-- `is-down`: Boolean down/up state. Present when `contactMode == .down`.
-- `destination-url`: Optional landing URL for client to present after server's acknowledgement of gesture.
+- `contact-mode`: Sepcifies lane offered for gesturing, or the contact type. Send by itself when asking the client to switch modes before a value exists; include it with a matching value specifier when desired.
+- `is-yes`: Boolean yes/no state, expresses intereaction's result for `yes` verb.
+- `is-down`: Optional boolean down/up state for a `down` verb.
+- `destination-url`: Optional landing URL client presents after server's acknowledgement of gesture.
 
 
 ## Signature Contract
