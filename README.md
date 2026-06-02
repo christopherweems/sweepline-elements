@@ -79,7 +79,7 @@ func handleSweeplineRequest(
 
 ## Request Payload
 
-A Sweepline request contains exactly one verb key. Current request bodies use `is-tap`, `is-yes`, or `is-down`:
+A Sweepline request contains exactly one contact signal. Current request bodies use `is-tap`, `is-yes`, or `is-down`; requests can also include `contact-type` to identify the active contact lane.
 
 ```json
 {
@@ -98,6 +98,7 @@ Fields:
 - `is-tap`: Boolean tap/release state. Present when `verb == .tap`.
 - `is-yes`: Boolean yes/no state. Present when `verb == .yes`.
 - `is-down`: Boolean down/up state. Present when `verb == .down`.
+- `contact-type`: Optional contact type for requests carrying an explicit contact lane. Taps sent alongside down/up interaction send `down`.
 - `date`: Client timestamp.
 - `idempotency-id`: Client-generated idempotency token. Servers should use this for replay/idempotency handling.
 - `sender-id`: Optional client sender identifier.
@@ -105,7 +106,7 @@ Fields:
 - `duration-held` (*): Optional hold duration in seconds.
 - `is-first-contact` (*): Optional flag set when this request is the sender's first contact with the endpoint.
 
-`SweeplineRequest` rejects payloads with more than one of `is-tap`, `is-yes`, or `is-down`, and also rejects payloads with no verb key.
+`SweeplineRequest` rejects payloads with more than one of `is-tap`, `is-yes`, or `is-down`, and also rejects payloads with no contact signal.
 
 
 ## Response Payload

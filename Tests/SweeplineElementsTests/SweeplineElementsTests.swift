@@ -193,6 +193,18 @@ import Testing
     #expect(request.idempotencyID == "down")
 }
 
+@Test func decodesTapRequestWithDownContactType() throws {
+    let data = Data(#"{"contact-type":"down","is-tap":true,"date":0,"idempotency-id":"down-tap"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    let request = try decoder.decode(SweeplineRequest.self, from: data)
+
+    #expect(request.verb == .tap)
+    #expect(request.value)
+    #expect(request.contactType == .down)
+    #expect(request.idempotencyID == "down-tap")
+}
+
 @Test func decodesRequestUsingIsTapKey() throws {
     let data = Data(#"{"is-tap":true,"date":0,"idempotency-id":"tap"}"#.utf8)
     let decoder = JSONDecoder()
@@ -222,21 +234,51 @@ import Testing
     }
 }
 
+@Test func rejectsRequestWithIsTapAndIsDownEvenWithContactType() throws {
+    let data = Data(#"{"contact-type":"down","is-tap":true,"is-down":false,"date":0,"idempotency-id":"ambiguous-down-tap"}"#.utf8)
+    let decoder = JSONDecoder()
+
+    #expect(throws: DecodingError.self) {
+        try decoder.decode(SweeplineRequest.self, from: data)
+    }
+}
+
 @Test func encodesRequestUsingVerbKey() throws {
     let request = SweeplineRequest(
         verb: .down,
         value: true,
         date: Date(timeIntervalSince1970: 0),
-        idempotencyID: "encoded"
+        idempotencyID: "encoded",
+        contactType: .down
     )
     let encoder = JSONEncoder()
     let data = try encoder.encode(request)
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     #expect(object["is-down"] as? Bool == true)
+    #expect(object["contact-type"] as? String == "down")
     #expect(object["is-tap"] == nil)
     #expect(object["is-yes"] == nil)
     #expect(object["idempotency-id"] as? String == "encoded")
+}
+
+@Test func encodesTapRequestWithDownContactType() throws {
+    let request = SweeplineRequest(
+        verb: .tap,
+        value: true,
+        date: Date(timeIntervalSince1970: 0),
+        idempotencyID: "encoded-down-tap",
+        contactType: .down
+    )
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(request)
+    let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    #expect(object["is-tap"] as? Bool == true)
+    #expect(object["contact-type"] as? String == "down")
+    #expect(object["is-down"] == nil)
+    #expect(object["is-yes"] == nil)
+    #expect(object["idempotency-id"] as? String == "encoded-down-tap")
 }
 
 @Test func encodesRequestUsingIsTapKey() throws {

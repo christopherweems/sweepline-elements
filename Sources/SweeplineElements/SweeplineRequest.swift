@@ -21,6 +21,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
     public let zoneID: String?
     public let durationHeld: TimeInterval?
     public let isFirstContact: Bool?
+    public let contactType: SweeplineContactMode?
     
     public init(
         verb: SweeplineVerb,
@@ -31,6 +32,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         zoneID: String? = nil,
         durationHeld: TimeInterval? = nil,
         isFirstContact: Bool? = nil,
+        contactType: SweeplineContactMode? = nil,
     ) {
         self.verb = verb
         self.value = value
@@ -40,6 +42,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         self.zoneID = zoneID
         self.durationHeld = durationHeld
         self.isFirstContact = isFirstContact
+        self.contactType = contactType
         
     }
     
@@ -47,6 +50,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         case isTap = "is-tap"
         case isYes = "is-yes"
         case isDown = "is-down"
+        case contactType = "contact-type"
         case date
         case idempotencyID = "idempotency-id"
         case senderID = "sender-id"
@@ -61,6 +65,8 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         let tapValue = try container.decodeIfPresent(Bool.self, forKey: .isTap)
         let yesValue = try container.decodeIfPresent(Bool.self, forKey: .isYes)
         let downValue = try container.decodeIfPresent(Bool.self, forKey: .isDown)
+        let contactType = try container.decodeIfPresent(SweeplineContactMode.self, forKey: .contactType)
+        
         let verbValues: [(SweeplineVerb, Bool, CodingKeys)] = [
             (.tap, tapValue, .isTap),
             (.yes, yesValue, .isYes),
@@ -98,6 +104,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         self.zoneID = try container.decodeIfPresent(String.self, forKey: .zoneID)
         self.durationHeld = try container.decodeIfPresent(TimeInterval.self, forKey: .durationHeld)
         self.isFirstContact = try container.decodeIfPresent(Bool.self, forKey: .isFirstContact)
+        self.contactType = contactType
         
     }
     
@@ -113,6 +120,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
             try container.encode(value, forKey: .isDown)
         }
         
+        try container.encodeIfPresent(contactType, forKey: .contactType)
         try container.encode(date, forKey: .date)
         try container.encode(idempotencyID, forKey: .idempotencyID)
         try container.encodeIfPresent(senderID, forKey: .senderID)
