@@ -10,7 +10,7 @@ public struct SweeplineResponse: Hashable, Sendable {
         value: Bool?,
         destinationURL: String? = nil,
     ) {
-        precondition(contactMode != .tap || value == true, "tap value must be true")
+        precondition(contactMode != .tap || value != false, "tap value must be true")
         self.version = version
         self.contactMode = contactMode
         self.value = value
