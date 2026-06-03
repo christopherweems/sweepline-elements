@@ -31,6 +31,9 @@ X-Sweepline-Signature: <base64-ed25519-signature>
 It does not own server routing, replay protection, authorization, key storage policy, or client Keychain behavior.
 
 
+`Sweepline Elements` is MIT licensed so endpoint authors, app developers, hardware tinkerers, and commercial teams can use the protocol helpers freely.
+
+
 ## Installation
 
 Add the package to your server target:
