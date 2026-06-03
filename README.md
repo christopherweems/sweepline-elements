@@ -30,7 +30,6 @@ X-Sweepline-Signature: <base64-ed25519-signature>
 
 It does not own server routing, replay protection, authorization, key storage policy, or client Keychain behavior.
 
-
 `Sweepline Elements` is MIT licensed so endpoint authors, app developers, hardware tinkerers, and commercial teams can use the protocol helpers freely.
 
 
@@ -206,6 +205,10 @@ let signedMessage = SweeplineSigner.signedMessage(
 let headers = signedMessage.headers
 ```
 
+## Notes around use of project name
+
+“Sweepline” compatibility means following the public Sweepline protocol.
+Use of this code does not imply endorsement by the Sweepline app or its author.
 
 ## Questions, Comments, Concerns 
 ### (This could have been a pull request?)
