@@ -91,7 +91,8 @@ A Sweepline request contains exactly one contact signal. Current request bodies 
   "sender-id": "kobe-bryant",
   "zone-id": "staples-center",
   "duration-held": 81.00,
-  "is-first-contact": true
+  "is-first-contact": true,
+  "contact-type": "yes",
 }
 ```
 
