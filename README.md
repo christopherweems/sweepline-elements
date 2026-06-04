@@ -209,6 +209,7 @@ let headers = signedMessage.headers
 
 “Sweepline” compatibility means following the public Sweepline protocol.
 Use of this code does not imply endorsement by the Sweepline app or its author.
+You can describe an implementation, product, service, device, or integration as `Sweepline-compatible`, but do not call your product `Sweepline`.
 
 ## Questions, Comments, Concerns 
 ### (This could have been a pull request?)
