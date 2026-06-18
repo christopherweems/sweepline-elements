@@ -270,15 +270,15 @@ import CashlineElements
 
 let request = CashlineRequest(
     eventType: .sale,
-    date: Date(timeIntervalSince1970: 0),
-    idempotencyID: "sale-001",
     senderID: "christopher",
     zoneID: "front-desk",
     productID: "fz-003",
     quantity: 3,
     pricePerItem: "5.00",
     currency: "USD",
-    note: "fruit appears bruised"
+    note: "fruit appears bruised",
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "sale-001"
 )
 
 let encoder = JSONEncoder()
