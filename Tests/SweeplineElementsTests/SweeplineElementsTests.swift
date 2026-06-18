@@ -1,6 +1,7 @@
 import Crypto
 import Foundation
 import Testing
+@testable import SweeplineSigning
 @testable import SweeplineElements
 
 @Test func verifiesValidSignature() throws {

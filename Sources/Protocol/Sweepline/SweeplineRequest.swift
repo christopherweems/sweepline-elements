@@ -1,15 +1,6 @@
+@_exported public import SweeplineSigning
 public import struct Foundation::Date
 public import struct Foundation::TimeInterval
-
-public enum SweeplineVerb: Hashable, Sendable {
-    // tap/release
-    case tap
-    // yes/no
-    case yes
-    // down/up
-    case down
-    
-}
 
 public struct SweeplineRequest: Codable, Hashable, Sendable {
     public let verb: SweeplineVerb
@@ -21,7 +12,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
     public let zoneID: String?
     public let durationHeld: TimeInterval?
     public let isFirstContact: Bool?
-    public let contactType: SweeplineContactMode?
+    public let contactType: SweeplineContactType?
     
     public init(
         verb: SweeplineVerb,
@@ -32,7 +23,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         zoneID: String? = nil,
         durationHeld: TimeInterval? = nil,
         isFirstContact: Bool? = nil,
-        contactType: SweeplineContactMode? = nil,
+        contactType: SweeplineContactType? = nil,
     ) {
         self.verb = verb
         self.value = value
@@ -65,7 +56,7 @@ public struct SweeplineRequest: Codable, Hashable, Sendable {
         let tapValue = try container.decodeIfPresent(Bool.self, forKey: .isTap)
         let yesValue = try container.decodeIfPresent(Bool.self, forKey: .isYes)
         let downValue = try container.decodeIfPresent(Bool.self, forKey: .isDown)
-        let contactType = try container.decodeIfPresent(SweeplineContactMode.self, forKey: .contactType)
+        let contactType = try container.decodeIfPresent(SweeplineContactType.self, forKey: .contactType)
         
         let verbValues: [(SweeplineVerb, Bool, CodingKeys)] = [
             (.tap, tapValue, .isTap),

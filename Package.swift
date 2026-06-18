@@ -14,6 +14,10 @@ let package = Package(
             name: "SweeplineElements",
             targets: ["SweeplineElements"]
         ),
+        .library(
+            name: "SweeplineSigning",
+            targets: ["SweeplineSigning"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "5.0.0"),
@@ -21,15 +25,24 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SweeplineElements",
+            name: "SweeplineSigning",
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
-            ]
+            ],
+        ),
+        .target(
+            name: "SweeplineElements",
+            dependencies: [
+                "SweeplineSigning",
+                .product(name: "Crypto", package: "swift-crypto"),
+            ],
+            path: "Sources/Protocol/Sweepline",
         ),
         .testTarget(
             name: "SweeplineElementsTests",
             dependencies: [
                 "SweeplineElements",
+                "SweeplineSigning",
                 .product(name: "Crypto", package: "swift-crypto"),
             ]
         ),

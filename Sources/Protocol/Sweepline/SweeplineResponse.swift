@@ -1,3 +1,5 @@
+import SweeplineSigning
+
 public struct SweeplineResponse: Hashable, Sendable {
     public let version: SweeplineVersion
     public let contactMode: SweeplineContactMode

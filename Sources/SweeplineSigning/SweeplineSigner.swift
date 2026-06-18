@@ -12,5 +12,4 @@ extension SweeplineSigner {
             signature: signature
         )
     }
-    
 }
