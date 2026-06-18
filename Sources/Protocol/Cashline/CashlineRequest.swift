@@ -4,21 +4,56 @@ public import struct Foundation::TimeInterval
 
 public struct CashlineRequest: Codable, Hashable, Sendable {
   public let eventType: CashlineEventType
+  public let senderID: String
+  public let zoneID: String
+  
+  public let productID: String
+  public let quantity: Int
+  public let unit: String? // `lbs`, `liter`, ..
+  
+  public let pricePerItem: String
+  public let currency: String
+  public let note: String?
+  
   public let date: Date
   public let idempotencyID: String
   
   public init(
     eventType: CashlineEventType,
+    senderID: String,
+    zoneID: String,
+    productID: String,
+    quantity: Int,
+    unit: String? = nil,
+    pricePerItem: String,
+    currency: String,
+    note: String? = nil,
     date: Date,
-    idempotencyID: String
+    idempotencyID: String,
   ) {
     self.eventType = eventType
+    self.senderID = senderID
+    self.zoneID = zoneID
+    self.productID = productID
+    self.quantity = quantity
+    self.unit = unit
+    self.pricePerItem = pricePerItem
+    self.currency = currency
+    self.note = note
     self.date = date
     self.idempotencyID = idempotencyID
   }
   
   enum CodingKeys: String, CodingKey {
     case eventType = "event-type"
+    case senderID = "sender-id"
+    case zoneID = "zone-id"
+    case productID = "product-id"
+    case quantity
+    case unit
+    case pricePerItem = "price-per-item"
+    case currency
+    case note
     case date
     case idempotencyID = "idempotency-id"
   }

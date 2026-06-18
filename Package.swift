@@ -53,6 +53,7 @@ let package = Package(
       name: "SweeplineElementsTests",
       dependencies: [
         "SweeplineElements",
+        "CashlineElements",
         "SweeplineSigning",
         .product(name: "Crypto", package: "swift-crypto"),
       ]

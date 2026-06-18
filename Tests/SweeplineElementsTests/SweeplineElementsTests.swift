@@ -2,6 +2,7 @@ import Crypto
 import Foundation
 import Testing
 
+@testable import CashlineElements
 @testable import SweeplineElements
 @testable import SweeplineSigning
 
@@ -336,6 +337,90 @@ import Testing
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
   #expect(object["is-first-contact"] == nil)
+}
+
+@Test func decodesCashlineRequestFromSamplePayload() throws {
+  let data = Data(
+    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","sender-id":"christopher","zone-id":"front-desk","event-type":"sale","product-id":"fz-003","quantity":3,"unit":"item","price-per-item":"5.00","currency":"USD","note":"fruit appears bruised"}"#.utf8)
+  let decoder = JSONDecoder()
+  decoder.dateDecodingStrategy = .iso8601
+
+  let request = try decoder.decode(CashlineRequest.self, from: data)
+
+  #expect(request.eventType == .sale)
+  #expect(request.idempotencyID == "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA")
+  #expect(request.senderID == "christopher")
+  #expect(request.zoneID == "front-desk")
+  #expect(request.productID == "fz-003")
+  #expect(request.quantity == 3)
+  #expect(request.unit == "item")
+  #expect(request.pricePerItem == "5.00")
+  #expect(request.currency == "USD")
+  #expect(request.note == "fruit appears bruised")
+}
+
+@Test func decodesCashlineRequestWithoutUnit() throws {
+  let data = Data(
+    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","sender-id":"christopher","zone-id":"front-desk","event-type":"sale","product-id":"fz-003","quantity":3,"price-per-item":"5.00","currency":"USD"}"#.utf8)
+  let decoder = JSONDecoder()
+  decoder.dateDecodingStrategy = .iso8601
+
+  let request = try decoder.decode(CashlineRequest.self, from: data)
+
+  #expect(request.unit == nil)
+}
+
+@Test func encodesCashlineRequestUsingKebabCaseKeys() throws {
+  let request = CashlineRequest(
+    eventType: .sale,
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
+    senderID: "christopher",
+    zoneID: "front-desk",
+    productID: "fz-003",
+    quantity: 3,
+    unit: "item",
+    pricePerItem: "5.00",
+    currency: "USD",
+    note: "fruit appears bruised"
+  )
+  let encoder = JSONEncoder()
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode(request)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["date"] as? String == "1970-01-01T00:00:00Z")
+  #expect(object["idempotency-id"] as? String == "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA")
+  #expect(object["sender-id"] as? String == "christopher")
+  #expect(object["zone-id"] as? String == "front-desk")
+  #expect(object["event-type"] as? String == "sale")
+  #expect(object["product-id"] as? String == "fz-003")
+  #expect((object["quantity"] as? NSNumber)?.intValue == 3)
+  #expect(object["unit"] as? String == "item")
+  #expect(object["price-per-item"] as? String == "5.00")
+  #expect(object["currency"] as? String == "USD")
+  #expect(object["note"] as? String == "fruit appears bruised")
+}
+
+@Test func encodesCashlineRequestWithoutUnitOmittingKey() throws {
+  let request = CashlineRequest(
+    eventType: .sale,
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
+    senderID: "christopher",
+    zoneID: "front-desk",
+    productID: "fz-003",
+    quantity: 3,
+    pricePerItem: "5.00",
+    currency: "USD",
+    note: "fruit appears bruised"
+  )
+  let encoder = JSONEncoder()
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode(request)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["unit"] == nil)
 }
 
 @Test func decodesTapResponseUsingContactMode() throws {
