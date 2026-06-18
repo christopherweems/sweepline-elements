@@ -17,16 +17,28 @@ X-Sweepline-Public-Key: <base64-raw-ed25519-public-key>
 X-Sweepline-Signature: <base64-ed25519-signature>
 ```
 
-## The Package
+## The Packages
 
 `SweeplineElements` provides:
 
-- `SweeplineSignedMessage` for parsing and emitting signature metadata.
-- `SweeplineVerifier` for verifying a signed request body.
 - `SweeplineRequest` for decoding the request JSON payload.
 - `SweeplineResponse` for encoding and decoding endpoint response JSON.
+
+`CashlineElements` provides:
+
+- `CashlineRequest` for a single business event request.
+- `CashlineResponse` for a minimal response model.
+- `CashlineEventType` for the initial Cashline event types.
+
+`SweeplineSigning` provides:
+
+- `SweeplineSignedMessage` for parsing and emitting signature metadata.
+- `SweeplineVerifier` for verifying a signed request body.
 - `SweeplineKeyID` for the shared key ID derivation algorithm.
 - `SweeplineHeader` for the canonical HTTP header names.
+- `SweeplineSigner` for building a signed-message container from raw bytes.
+
+All three modules keep the same signing contract for request bodies and metadata.
 
 It does not own server routing, replay protection, authorization, key storage policy, or client Keychain behavior.
 
@@ -45,6 +57,18 @@ Then add the product dependency:
 
 ```swift
 .product(name: "SweeplineElements", package: "sweepline-elements")
+```
+
+If you only need the shared signing helpers:
+
+```swift
+.product(name: "SweeplineSigning", package: "sweepline-elements")
+```
+
+If you need the Cashline models:
+
+```swift
+.product(name: "CashlineElements", package: "sweepline-elements")
 ```
 
 
@@ -77,6 +101,13 @@ func handleSweeplineRequest(
 ```
 
 `SweeplineSignedMessage.init(headers:)` treats header names case-insensitively, which matches HTTP header semantics.
+
+If you only need to parse, verify, or emit signature metadata, import `SweeplineSigning` directly:
+
+```swift
+import Foundation
+import SweeplineSigning
+```
 
 
 ## Request Payload
@@ -205,6 +236,46 @@ let signedMessage = SweeplineSigner.signedMessage(
 
 let headers = signedMessage.headers
 ```
+
+## Cashline
+
+`CashlineElements` uses the same signing metadata and header names as Sweepline, but keeps its own request and response models.
+
+```swift
+import CashlineElements
+```
+
+`CashlineRequest` models a single business event:
+
+- `tap`
+- `sale`
+
+The request format is intentionally small and only includes:
+
+- `event-type`
+- `date`
+- `idempotency-id`
+
+```swift
+import Foundation
+import CashlineElements
+
+let request = CashlineRequest(
+    eventType: .sale,
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "sale-001"
+)
+
+let encoder = JSONEncoder()
+encoder.dateEncodingStrategy = .iso8601
+let data = try encoder.encode(request)
+
+let decoder = JSONDecoder()
+decoder.dateDecodingStrategy = .iso8601
+let decoded = try decoder.decode(CashlineRequest.self, from: data)
+```
+
+`CashlineElements` uses the same signature metadata contract as Sweepline, so a Cashline endpoint can reuse `SweeplineSigning` for header parsing and verification unchanged.
 
 ## Notes around use of project name
 
