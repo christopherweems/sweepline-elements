@@ -250,11 +250,19 @@ import CashlineElements
 - `tap`
 - `sale`
 
-The request format is intentionally small and only includes:
+The request format includes:
 
 - `event-type`
 - `date`
 - `idempotency-id`
+- `sender-id`
+- `zone-id`
+- `product-id`
+- `quantity`
+- `unit` optional
+- `price-per-item`
+- `currency`
+- `note`
 
 ```swift
 import Foundation
@@ -263,7 +271,14 @@ import CashlineElements
 let request = CashlineRequest(
     eventType: .sale,
     date: Date(timeIntervalSince1970: 0),
-    idempotencyID: "sale-001"
+    idempotencyID: "sale-001",
+    senderID: "christopher",
+    zoneID: "front-desk",
+    productID: "fz-003",
+    quantity: 3,
+    pricePerItem: "5.00",
+    currency: "USD",
+    note: "fruit appears bruised"
 )
 
 let encoder = JSONEncoder()
