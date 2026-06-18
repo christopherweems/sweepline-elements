@@ -370,11 +370,21 @@ import Testing
   #expect(request.unit == nil)
 }
 
+@Test func decodesCashlineRequestWithoutSenderAndZone() throws {
+  let data = Data(
+    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","event-type":"sale","product-id":"fz-003","quantity":3,"price-per-item":"5.00","currency":"USD"}"#.utf8)
+  let decoder = JSONDecoder()
+  decoder.dateDecodingStrategy = .iso8601
+
+  let request = try decoder.decode(CashlineRequest.self, from: data)
+
+  #expect(request.senderID == nil)
+  #expect(request.zoneID == nil)
+}
+
 @Test func encodesCashlineRequestUsingKebabCaseKeys() throws {
   let request = CashlineRequest(
     eventType: .sale,
-    date: Date(timeIntervalSince1970: 0),
-    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
     senderID: "christopher",
     zoneID: "front-desk",
     productID: "fz-003",
@@ -382,7 +392,9 @@ import Testing
     unit: "item",
     pricePerItem: "5.00",
     currency: "USD",
-    note: "fruit appears bruised"
+    note: "fruit appears bruised",
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA"
   )
   let encoder = JSONEncoder()
   encoder.dateEncodingStrategy = .iso8601
@@ -405,15 +417,15 @@ import Testing
 @Test func encodesCashlineRequestWithoutUnitOmittingKey() throws {
   let request = CashlineRequest(
     eventType: .sale,
-    date: Date(timeIntervalSince1970: 0),
-    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
     senderID: "christopher",
     zoneID: "front-desk",
     productID: "fz-003",
     quantity: 3,
     pricePerItem: "5.00",
     currency: "USD",
-    note: "fruit appears bruised"
+    note: "fruit appears bruised",
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA"
   )
   let encoder = JSONEncoder()
   encoder.dateEncodingStrategy = .iso8601
@@ -421,6 +433,28 @@ import Testing
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
   #expect(object["unit"] == nil)
+}
+
+@Test func encodesCashlineRequestWithoutSenderAndZoneOmittingKeys() throws {
+  let request = CashlineRequest(
+    eventType: .sale,
+    senderID: nil,
+    zoneID: nil,
+    productID: "fz-003",
+    quantity: 3,
+    pricePerItem: "5.00",
+    currency: "USD",
+    note: nil,
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA"
+  )
+  let encoder = JSONEncoder()
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode(request)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["sender-id"] == nil)
+  #expect(object["zone-id"] == nil)
 }
 
 @Test func decodesTapResponseUsingContactMode() throws {

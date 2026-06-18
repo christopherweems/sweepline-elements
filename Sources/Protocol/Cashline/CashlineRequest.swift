@@ -4,8 +4,8 @@ public import struct Foundation::TimeInterval
 
 public struct CashlineRequest: Codable, Hashable, Sendable {
   public let eventType: CashlineEventType
-  public let senderID: String
-  public let zoneID: String
+  public let senderID: String?
+  public let zoneID: String?
   
   public let productID: String
   public let quantity: Int
@@ -20,8 +20,8 @@ public struct CashlineRequest: Codable, Hashable, Sendable {
   
   public init(
     eventType: CashlineEventType,
-    senderID: String,
-    zoneID: String,
+    senderID: String?,
+    zoneID: String?,
     productID: String,
     quantity: Int,
     unit: String? = nil,
@@ -32,8 +32,8 @@ public struct CashlineRequest: Codable, Hashable, Sendable {
     idempotencyID: String,
   ) {
     self.eventType = eventType
-    self.senderID = senderID
-    self.zoneID = zoneID
+    self.senderID = senderID?.isEmpty == true ? nil : senderID
+    self.zoneID = zoneID?.isEmpty == true ? nil : zoneID
     self.productID = productID
     self.quantity = quantity
     self.unit = unit
