@@ -341,7 +341,7 @@ import Testing
 
 @Test func decodesSweetfeetRequestFromSamplePayload() throws {
   let data = Data(
-    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","sender-id":"christopher","zone-id":"front-desk","event-type":"sale","product-id":"fz-003","quantity":3,"unit":"item","price-per-item":"5.00","currency":"USD","note":"fruit appears bruised"}"#.utf8)
+    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","sender-id":"christopher","zone-id":"front-desk","event-type":"sale","product-id":"fz-003","quantity":3,"unit":"item","price-per-item":"5.00","currency":"USD","note":"fruit appears bruised","expiration-date":"2026-05-31T16:20:00Z"}"#.utf8)
   let decoder = JSONDecoder()
   decoder.dateDecodingStrategy = .iso8601
 
@@ -357,6 +357,7 @@ import Testing
   #expect(request.pricePerItem == "5.00")
   #expect(request.currency == "USD")
   #expect(request.note == "fruit appears bruised")
+  #expect(request.expirationDate == Date(timeIntervalSince1970: 1_780_244_400))
 }
 
 @Test func decodesSweetfeetRequestWithoutUnit() throws {
@@ -368,6 +369,7 @@ import Testing
   let request = try decoder.decode(SweetfeetRequest.self, from: data)
 
   #expect(request.unit == nil)
+  #expect(request.expirationDate == nil)
 }
 
 @Test func decodesSweetfeetRequestWithoutSenderAndZone() throws {
@@ -393,6 +395,7 @@ import Testing
     pricePerItem: "5.00",
     currency: "USD",
     note: "fruit appears bruised",
+    expirationDate: Date(timeIntervalSince1970: 1_780_244_400),
     date: Date(timeIntervalSince1970: 0),
     idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA"
   )
@@ -412,6 +415,7 @@ import Testing
   #expect(object["price-per-item"] as? String == "5.00")
   #expect(object["currency"] as? String == "USD")
   #expect(object["note"] as? String == "fruit appears bruised")
+  #expect(object["expiration-date"] as? String == "2026-05-31T16:20:00Z")
 }
 
 @Test func encodesSweetfeetRequestWithoutUnitOmittingKey() throws {

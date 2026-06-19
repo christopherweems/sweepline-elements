@@ -263,6 +263,7 @@ The request format includes:
 - `price-per-item`
 - `currency`
 - `note`
+- `expiration-date` optional
 
 ```swift
 import Foundation
@@ -277,6 +278,7 @@ let request = SweetfeetRequest(
     pricePerItem: "5.00",
     currency: "USD",
     note: "fruit appears bruised",
+    expirationDate: Date(timeIntervalSince1970: 1_780_244_400),
     date: Date(timeIntervalSince1970: 0),
     idempotencyID: "sale-001"
 )

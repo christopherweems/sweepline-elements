@@ -14,6 +14,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
   public let pricePerItem: String
   public let currency: String
   public let note: String?
+  public let expirationDate: Date?
   
   public let date: Date
   public let idempotencyID: String
@@ -28,6 +29,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     pricePerItem: String,
     currency: String,
     note: String? = nil,
+    expirationDate: Date? = nil,
     date: Date,
     idempotencyID: String,
   ) {
@@ -40,6 +42,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     self.pricePerItem = pricePerItem
     self.currency = currency
     self.note = note
+    self.expirationDate = expirationDate
     self.date = date
     self.idempotencyID = idempotencyID
   }
@@ -54,6 +57,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     case pricePerItem = "price-per-item"
     case currency
     case note
+    case expirationDate = "expiration-date"
     case date
     case idempotencyID = "idempotency-id"
   }
