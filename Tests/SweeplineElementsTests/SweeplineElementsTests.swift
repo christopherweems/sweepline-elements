@@ -2,7 +2,7 @@ import Crypto
 import Foundation
 import Testing
 
-@testable import CashlineElements
+@testable import SweetfeetElements
 @testable import SweeplineElements
 @testable import SweeplineSigning
 
@@ -339,13 +339,13 @@ import Testing
   #expect(object["is-first-contact"] == nil)
 }
 
-@Test func decodesCashlineRequestFromSamplePayload() throws {
+@Test func decodesSweetfeetRequestFromSamplePayload() throws {
   let data = Data(
     #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","sender-id":"christopher","zone-id":"front-desk","event-type":"sale","product-id":"fz-003","quantity":3,"unit":"item","price-per-item":"5.00","currency":"USD","note":"fruit appears bruised"}"#.utf8)
   let decoder = JSONDecoder()
   decoder.dateDecodingStrategy = .iso8601
 
-  let request = try decoder.decode(CashlineRequest.self, from: data)
+  let request = try decoder.decode(SweetfeetRequest.self, from: data)
 
   #expect(request.eventType == .sale)
   #expect(request.idempotencyID == "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA")
@@ -359,31 +359,31 @@ import Testing
   #expect(request.note == "fruit appears bruised")
 }
 
-@Test func decodesCashlineRequestWithoutUnit() throws {
+@Test func decodesSweetfeetRequestWithoutUnit() throws {
   let data = Data(
     #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","sender-id":"christopher","zone-id":"front-desk","event-type":"sale","product-id":"fz-003","quantity":3,"price-per-item":"5.00","currency":"USD"}"#.utf8)
   let decoder = JSONDecoder()
   decoder.dateDecodingStrategy = .iso8601
 
-  let request = try decoder.decode(CashlineRequest.self, from: data)
+  let request = try decoder.decode(SweetfeetRequest.self, from: data)
 
   #expect(request.unit == nil)
 }
 
-@Test func decodesCashlineRequestWithoutSenderAndZone() throws {
+@Test func decodesSweetfeetRequestWithoutSenderAndZone() throws {
   let data = Data(
     #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","event-type":"sale","product-id":"fz-003","quantity":3,"price-per-item":"5.00","currency":"USD"}"#.utf8)
   let decoder = JSONDecoder()
   decoder.dateDecodingStrategy = .iso8601
 
-  let request = try decoder.decode(CashlineRequest.self, from: data)
+  let request = try decoder.decode(SweetfeetRequest.self, from: data)
 
   #expect(request.senderID == nil)
   #expect(request.zoneID == nil)
 }
 
-@Test func encodesCashlineRequestUsingKebabCaseKeys() throws {
-  let request = CashlineRequest(
+@Test func encodesSweetfeetRequestUsingKebabCaseKeys() throws {
+  let request = SweetfeetRequest(
     eventType: .sale,
     senderID: "christopher",
     zoneID: "front-desk",
@@ -414,8 +414,8 @@ import Testing
   #expect(object["note"] as? String == "fruit appears bruised")
 }
 
-@Test func encodesCashlineRequestWithoutUnitOmittingKey() throws {
-  let request = CashlineRequest(
+@Test func encodesSweetfeetRequestWithoutUnitOmittingKey() throws {
+  let request = SweetfeetRequest(
     eventType: .sale,
     senderID: "christopher",
     zoneID: "front-desk",
@@ -435,8 +435,8 @@ import Testing
   #expect(object["unit"] == nil)
 }
 
-@Test func encodesCashlineRequestWithoutSenderAndZoneOmittingKeys() throws {
-  let request = CashlineRequest(
+@Test func encodesSweetfeetRequestWithoutSenderAndZoneOmittingKeys() throws {
+  let request = SweetfeetRequest(
     eventType: .sale,
     senderID: nil,
     zoneID: nil,

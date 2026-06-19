@@ -15,8 +15,8 @@ let package = Package(
       targets: ["SweeplineElements"]
     ),
     .library(
-      name: "CashlineElements",
-      targets: ["CashlineElements"]
+      name: "SweetfeetElements",
+      targets: ["SweetfeetElements"]
     ),
     .library(
       name: "SweeplineSigning",
@@ -43,17 +43,17 @@ let package = Package(
       path: "Sources/Protocol/Sweepline",
     ),
     .target(
-      name: "CashlineElements",
+      name: "SweetfeetElements",
       dependencies: [
         "SweeplineSigning"
       ],
-      path: "Sources/Protocol/Cashline",
+      path: "Sources/Protocol/Sweetfeet",
     ),
     .testTarget(
       name: "SweeplineElementsTests",
       dependencies: [
         "SweeplineElements",
-        "CashlineElements",
+        "SweetfeetElements",
         "SweeplineSigning",
         .product(name: "Crypto", package: "swift-crypto"),
       ]

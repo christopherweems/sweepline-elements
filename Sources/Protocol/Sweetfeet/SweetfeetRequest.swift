@@ -2,8 +2,8 @@
 public import struct Foundation::Date
 public import struct Foundation::TimeInterval
 
-public struct CashlineRequest: Codable, Hashable, Sendable {
-  public let eventType: CashlineEventType
+public struct SweetfeetRequest: Codable, Hashable, Sendable {
+  public let eventType: SweetfeetEventType
   public let senderID: String?
   public let zoneID: String?
   
@@ -19,7 +19,7 @@ public struct CashlineRequest: Codable, Hashable, Sendable {
   public let idempotencyID: String
   
   public init(
-    eventType: CashlineEventType,
+    eventType: SweetfeetEventType,
     senderID: String?,
     zoneID: String?,
     productID: String,
@@ -58,3 +58,5 @@ public struct CashlineRequest: Codable, Hashable, Sendable {
     case idempotencyID = "idempotency-id"
   }
 }
+
+public typealias CashlineRequest = SweetfeetRequest

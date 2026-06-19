@@ -24,11 +24,11 @@ X-Sweepline-Signature: <base64-ed25519-signature>
 - `SweeplineRequest` for decoding the request JSON payload.
 - `SweeplineResponse` for encoding and decoding endpoint response JSON.
 
-`CashlineElements` provides:
+`SweetfeetElements` provides:
 
-- `CashlineRequest` for a single business event request.
-- `CashlineResponse` for a minimal response model.
-- `CashlineEventType` for the initial Cashline event types.
+- `SweetfeetRequest` for a single business event request.
+- `SweetfeetResponse` for a minimal response model.
+- `SweetfeetEventType` for the initial Sweetfeet event types.
 
 `SweeplineSigning` provides:
 
@@ -65,10 +65,10 @@ If you only need the shared signing helpers:
 .product(name: "SweeplineSigning", package: "sweepline-elements")
 ```
 
-If you need the Cashline models:
+If you need the Sweetfeet models:
 
 ```swift
-.product(name: "CashlineElements", package: "sweepline-elements")
+.product(name: "SweetfeetElements", package: "sweepline-elements")
 ```
 
 
@@ -237,15 +237,15 @@ let signedMessage = SweeplineSigner.signedMessage(
 let headers = signedMessage.headers
 ```
 
-## Cashline
+## Sweetfeet
 
-`CashlineElements` uses the same signing metadata and header names as Sweepline, but keeps its own request and response models.
+`SweetfeetElements` uses the same signing metadata and header names as Sweepline, but keeps its own request and response models.
 
 ```swift
-import CashlineElements
+import SweetfeetElements
 ```
 
-`CashlineRequest` models a single business event:
+`SweetfeetRequest` models a single business event:
 
 - `tap`
 - `sale`
@@ -266,9 +266,9 @@ The request format includes:
 
 ```swift
 import Foundation
-import CashlineElements
+import SweetfeetElements
 
-let request = CashlineRequest(
+let request = SweetfeetRequest(
     eventType: .sale,
     senderID: "christopher",
     zoneID: "front-desk",
@@ -287,10 +287,10 @@ let data = try encoder.encode(request)
 
 let decoder = JSONDecoder()
 decoder.dateDecodingStrategy = .iso8601
-let decoded = try decoder.decode(CashlineRequest.self, from: data)
+let decoded = try decoder.decode(SweetfeetRequest.self, from: data)
 ```
 
-`CashlineElements` uses the same signature metadata contract as Sweepline, so a Cashline endpoint can reuse `SweeplineSigning` for header parsing and verification unchanged.
+`SweetfeetElements` uses the same signature metadata contract as Sweepline, so a Sweetfeet endpoint can reuse `SweeplineSigning` for header parsing and verification unchanged.
 
 ## Notes around use of project name
 
