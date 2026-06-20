@@ -17,7 +17,7 @@ X-Sweepline-Public-Key: <base64-raw-ed25519-public-key>
 X-Sweepline-Signature: <base64-ed25519-signature>
 ```
 
-## The Packages
+## Packages
 
 `SweeplineElements` provides:
 
@@ -249,8 +249,9 @@ import SweetfeetElements
 
 - `tap`
 - `sale`
+- `item-price-check`
 
-The request format includes:
+The sale request format includes:
 
 - `event-type`
 - `date`
@@ -296,6 +297,30 @@ let decoder = JSONDecoder()
 decoder.dateDecodingStrategy = .iso8601
 let decoded = try decoder.decode(SweetfeetRequest.self, from: data)
 ```
+
+`SweetfeetPricePerItemInquiryRequest` requests the current price for a known product ID without including sale-only fields such as quantity, price, or payment options.
+
+```swift
+let inquiry = SweetfeetPricePerItemInquiryRequest(
+    senderID: "christopher",
+    zoneID: "front-desk",
+    productID: "fz-003",
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "price-inquiry-001"
+)
+```
+
+When a server has a price for the product, it can return `SweetfeetPricePerItemInquiryResponse`:
+
+```json
+{
+  "product-id": "fz-003",
+  "price-per-item": "5.00",
+  "currency": "USD",
+}
+```
+
+If the server does not have a price for the product, the protocol expects the server to throw a 4xx/5xx error code.
 
 `SweetfeetElements` uses the same signature metadata contract as Sweepline, so a Sweetfeet endpoint can reuse `SweeplineSigning` for header parsing and verification unchanged.
 

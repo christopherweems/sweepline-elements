@@ -474,6 +474,94 @@ import Testing
   #expect(object["zone-id"] == nil)
 }
 
+@Test func decodesSweetfeetPricePerItemInquiryEventType() throws {
+  let eventType = try JSONDecoder().decode(
+    SweetfeetEventType.self,
+    from: Data(#""item-price-check""#.utf8)
+  )
+
+  #expect(eventType == .itemPriceCheck)
+}
+
+@Test func encodesSweetfeetPricePerItemInquiryRequest() throws {
+  let request = SweetfeetItemPriceCheckRequest(
+    senderID: "christopher",
+    zoneID: "front-desk",
+    productID: "fz-003",
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "price-inquiry-001"
+  )
+  let encoder = JSONEncoder()
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode(request)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["event-type"] as? String == "item-price-check")
+  #expect(object["sender-id"] as? String == "christopher")
+  #expect(object["zone-id"] as? String == "front-desk")
+  #expect(object["product-id"] as? String == "fz-003")
+  #expect(object["date"] as? String == "1970-01-01T00:00:00Z")
+  #expect(object["idempotency-id"] as? String == "price-inquiry-001")
+  #expect(object["quantity"] == nil)
+  #expect(object["price-per-item"] == nil)
+  #expect(object["currency"] == nil)
+}
+
+@Test func decodesSweetfeetPricePerItemInquiryRequest() throws {
+  let data = Data(
+    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"price-inquiry-001","sender-id":"christopher","zone-id":"front-desk","event-type":"item-price-check","product-id":"fz-003"}"#.utf8)
+  let decoder = JSONDecoder()
+  decoder.dateDecodingStrategy = .iso8601
+
+  let request = try decoder.decode(SweetfeetItemPriceCheckRequest.self, from: data)
+
+  #expect(request.eventType == .itemPriceCheck)
+  #expect(request.senderID == "christopher")
+  #expect(request.zoneID == "front-desk")
+  #expect(request.productID == "fz-003")
+  #expect(request.date == Date(timeIntervalSince1970: 1_779_639_600))
+  #expect(request.idempotencyID == "price-inquiry-001")
+}
+
+@Test func encodesSweetfeetPricePerItemInquiryResponse() throws {
+  let response = SweetfeetItemPriceCheckResponse(
+    productID: "fz-003",
+    pricePerItem: "5.00",
+    currency: "USD",
+    unit: "item"
+  )
+  let data = try JSONEncoder().encode(response)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["event-type"] as? String == "item-price-check")
+  #expect(object["product-id"] as? String == "fz-003")
+  #expect(object["price-per-item"] as? String == "5.00")
+  #expect(object["currency"] as? String == "USD")
+  #expect(object["unit"] as? String == "item")
+}
+
+@Test func decodesSweetfeetPricePerItemInquiryResponseWithoutUnit() throws {
+  let data = Data(
+    #"{"event-type":"item-price-check","product-id":"fz-003","price-per-item":"5.00","currency":"USD"}"#.utf8)
+
+  let response = try JSONDecoder().decode(SweetfeetItemPriceCheckResponse.self, from: data)
+
+  #expect(response.eventType == .itemPriceCheck)
+  #expect(response.productID == "fz-003")
+  #expect(response.pricePerItem == "5.00")
+  #expect(response.currency == "USD")
+  #expect(response.unit == nil)
+}
+
+@Test func rejectsSweetfeetPricePerItemInquiryResponseWithMismatchedEventType() {
+  let data = Data(
+    #"{"event-type":"sale","product-id":"fz-003","price-per-item":"5.00","currency":"USD"}"#.utf8)
+
+  #expect(throws: DecodingError.self) {
+    try JSONDecoder().decode(SweetfeetItemPriceCheckResponse.self, from: data)
+  }
+}
+
 @Test func decodesTapResponseUsingContactMode() throws {
   let data = Data(
     #"{"sweepline-version":"1.1","contact-mode":"tap","destination-url":"https://example.com/contact"}"#
