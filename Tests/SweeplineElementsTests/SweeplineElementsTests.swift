@@ -370,6 +370,8 @@ import Testing
   let request = try decoder.decode(SweetfeetRequest.self, from: data)
 
   #expect(request.unit == nil)
+  #expect(request.pricePerItem == "5.00")
+  #expect(request.currency == "USD")
   #expect(request.expirationDate == nil)
 }
 
@@ -383,6 +385,20 @@ import Testing
 
   #expect(request.senderID == nil)
   #expect(request.zoneID == nil)
+  #expect(request.pricePerItem == "5.00")
+  #expect(request.currency == "USD")
+}
+
+@Test func decodesSweetfeetRequestWithoutPriceFields() throws {
+  let data = Data(
+    #"{"date":"2026-05-24T16:20:00Z","idempotency-id":"7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA","event-type":"sale","product-id":"fz-003","quantity":3}"#.utf8)
+  let decoder = JSONDecoder()
+  decoder.dateDecodingStrategy = .iso8601
+
+  let request = try decoder.decode(SweetfeetRequest.self, from: data)
+
+  #expect(request.pricePerItem == nil)
+  #expect(request.currency == nil)
 }
 
 @Test func encodesSweetfeetRequestUsingKebabCaseKeys() throws {
@@ -472,6 +488,26 @@ import Testing
 
   #expect(object["sender-id"] == nil)
   #expect(object["zone-id"] == nil)
+}
+
+@Test func encodesSweetfeetRequestWithoutPriceOmittingKeys() throws {
+  let request = SweetfeetRequest(
+    eventType: .sale,
+    senderID: "christopher",
+    zoneID: "front-desk",
+    productID: "fz-003",
+    quantity: 3,
+    note: nil,
+    date: Date(timeIntervalSince1970: 0),
+    idempotencyID: "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA"
+  )
+  let encoder = JSONEncoder()
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode(request)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["price-per-item"] == nil)
+  #expect(object["currency"] == nil)
 }
 
 @Test func decodesSweetfeetPricePerItemInquiryEventType() throws {

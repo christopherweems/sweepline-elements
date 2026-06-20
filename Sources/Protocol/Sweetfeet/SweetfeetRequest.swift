@@ -11,8 +11,8 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
   public let quantity: Int
   public let unit: String? // `lbs`, `liter`, ..
   
-  public let pricePerItem: String
-  public let currency: String
+  public let pricePerItem: String?
+  public let currency: String?
   public let paymentOptions: [SweetfeetPaymentOption]?
   public let note: String?
   public let expirationDate: Date?
@@ -27,8 +27,8 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     productID: String,
     quantity: Int,
     unit: String? = nil,
-    pricePerItem: String,
-    currency: String,
+    pricePerItem: String? = nil,
+    currency: String? = nil,
     paymentOptions: [SweetfeetPaymentOption]? = nil,
     note: String? = nil,
     expirationDate: Date? = nil,
