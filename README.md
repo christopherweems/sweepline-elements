@@ -320,7 +320,7 @@ When a server has a price for the product, it can return `SweetfeetPricePerItemI
 }
 ```
 
-If the server does not have a price for the product, the protocol expects the server to throw a 4xx/5xx error code.
+If the server does not have a price for the product, the protocol expects the server return a 404 or other error status code.
 
 `SweetfeetElements` uses the same signature metadata contract as Sweepline, so a Sweetfeet endpoint can reuse `SweeplineSigning` for header parsing and verification unchanged.
 
