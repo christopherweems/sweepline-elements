@@ -262,6 +262,7 @@ The request format includes:
 - `unit` optional
 - `price-per-item`
 - `currency`
+- `payment-options` optional
 - `note`
 - `expiration-date` optional
 
@@ -277,6 +278,10 @@ let request = SweetfeetRequest(
     quantity: 3,
     pricePerItem: "5.00",
     currency: "USD",
+    paymentOptions: [
+        SweetfeetPaymentOption(amount: "2", currency: "USD"),
+        SweetfeetPaymentOption(description: "lightly used iPod mini"),
+    ],
     note: "fruit appears bruised",
     expirationDate: Date(timeIntervalSince1970: 1_780_244_400),
     date: Date(timeIntervalSince1970: 0),

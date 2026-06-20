@@ -13,6 +13,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
   
   public let pricePerItem: String
   public let currency: String
+  public let paymentOptions: [SweetfeetPaymentOption]?
   public let note: String?
   public let expirationDate: Date?
   
@@ -28,6 +29,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     unit: String? = nil,
     pricePerItem: String,
     currency: String,
+    paymentOptions: [SweetfeetPaymentOption]? = nil,
     note: String? = nil,
     expirationDate: Date? = nil,
     date: Date,
@@ -41,6 +43,7 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     self.unit = unit
     self.pricePerItem = pricePerItem
     self.currency = currency
+    self.paymentOptions = paymentOptions?.isEmpty == true ? nil : paymentOptions
     self.note = note
     self.expirationDate = expirationDate
     self.date = date
@@ -56,10 +59,32 @@ public struct SweetfeetRequest: Codable, Hashable, Sendable {
     case unit
     case pricePerItem = "price-per-item"
     case currency
+    case paymentOptions = "payment-options"
     case note
     case expirationDate = "expiration-date"
     case date
     case idempotencyID = "idempotency-id"
+  }
+}
+
+public struct SweetfeetPaymentOption: Codable, Hashable, Sendable {
+  public let amount: String?
+  public let currency: String?
+  public let description: String?
+  
+  public init(
+    amount: String,
+    currency: String,
+  ) {
+    self.amount = amount
+    self.currency = currency
+    self.description = nil
+  }
+  
+  public init(description: String) {
+    self.amount = nil
+    self.currency = nil
+    self.description = description
   }
 }
 

@@ -356,6 +356,7 @@ import Testing
   #expect(request.unit == "item")
   #expect(request.pricePerItem == "5.00")
   #expect(request.currency == "USD")
+  #expect(request.paymentOptions == nil)
   #expect(request.note == "fruit appears bruised")
   #expect(request.expirationDate == Date(timeIntervalSince1970: 1_780_244_400))
 }
@@ -394,6 +395,10 @@ import Testing
     unit: "item",
     pricePerItem: "5.00",
     currency: "USD",
+    paymentOptions: [
+      SweetfeetPaymentOption(amount: "2", currency: "USD"),
+      SweetfeetPaymentOption(description: "lightly used iPod mini"),
+    ],
     note: "fruit appears bruised",
     expirationDate: Date(timeIntervalSince1970: 1_780_244_400),
     date: Date(timeIntervalSince1970: 0),
@@ -414,6 +419,14 @@ import Testing
   #expect(object["unit"] as? String == "item")
   #expect(object["price-per-item"] as? String == "5.00")
   #expect(object["currency"] as? String == "USD")
+  let paymentOptions = try #require(object["payment-options"] as? [[String: Any]])
+  #expect(paymentOptions.count == 2)
+  #expect(paymentOptions[0]["amount"] as? String == "2")
+  #expect(paymentOptions[0]["currency"] as? String == "USD")
+  #expect(paymentOptions[0]["description"] == nil)
+  #expect(paymentOptions[1]["amount"] == nil)
+  #expect(paymentOptions[1]["currency"] == nil)
+  #expect(paymentOptions[1]["description"] as? String == "lightly used iPod mini")
   #expect(object["note"] as? String == "fruit appears bruised")
   #expect(object["expiration-date"] as? String == "2026-05-31T16:20:00Z")
 }
