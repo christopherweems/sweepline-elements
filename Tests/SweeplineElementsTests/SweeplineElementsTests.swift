@@ -562,6 +562,7 @@ import Testing
 @Test func encodesSweetfeetPricePerItemInquiryResponse() throws {
   let response = SweetfeetItemPriceCheckResponse(
     productID: "fz-003",
+    productNotes: "Fizzy Zero is the one you want",
     pricePerItem: "5.00",
     currency: "USD",
     unit: "item"
@@ -571,6 +572,7 @@ import Testing
 
   #expect(object["event-type"] as? String == "item-price-check")
   #expect(object["product-id"] as? String == "fz-003")
+  #expect(object["product-notes"] as? String == "Fizzy Zero is the one you want")
   #expect(object["price-per-item"] as? String == "5.00")
   #expect(object["currency"] as? String == "USD")
   #expect(object["unit"] as? String == "item")
@@ -578,12 +580,13 @@ import Testing
 
 @Test func decodesSweetfeetPricePerItemInquiryResponseWithoutUnit() throws {
   let data = Data(
-    #"{"event-type":"item-price-check","product-id":"fz-003","price-per-item":"5.00","currency":"USD"}"#.utf8)
+    #"{"event-type":"item-price-check","product-id":"fz-003","product-notes":"Fizzy Zero is the one you want","price-per-item":"5.00","currency":"USD"}"#.utf8)
 
   let response = try JSONDecoder().decode(SweetfeetItemPriceCheckResponse.self, from: data)
 
   #expect(response.eventType == .itemPriceCheck)
   #expect(response.productID == "fz-003")
+  #expect(response.productNotes == "Fizzy Zero is the one you want")
   #expect(response.pricePerItem == "5.00")
   #expect(response.currency == "USD")
   #expect(response.unit == nil)

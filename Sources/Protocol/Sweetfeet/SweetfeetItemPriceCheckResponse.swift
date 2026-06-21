@@ -1,18 +1,21 @@
 public struct SweetfeetItemPriceCheckResponse: Codable, Hashable, Sendable {
   public let eventType: SweetfeetEventType
   public let productID: String
+  public let productNotes: String?
   public let pricePerItem: String
   public let currency: String
   public let unit: String?
 
   public init(
     productID: String,
+    productNotes: String?,
     pricePerItem: String,
     currency: String,
     unit: String? = nil
   ) {
     self.eventType = .itemPriceCheck
     self.productID = productID
+    self.productNotes = productNotes
     self.pricePerItem = pricePerItem
     self.currency = currency
     self.unit = unit
@@ -21,6 +24,7 @@ public struct SweetfeetItemPriceCheckResponse: Codable, Hashable, Sendable {
   enum CodingKeys: String, CodingKey {
     case eventType = "event-type"
     case productID = "product-id"
+    case productNotes = "product-notes"
     case pricePerItem = "price-per-item"
     case currency
     case unit
@@ -39,6 +43,7 @@ public struct SweetfeetItemPriceCheckResponse: Codable, Hashable, Sendable {
 
     self.eventType = eventType
     self.productID = try container.decode(String.self, forKey: .productID)
+    self.productNotes = try container.decodeIfPresent(String.self, forKey: .productNotes)
     self.pricePerItem = try container.decode(String.self, forKey: .pricePerItem)
     self.currency = try container.decode(String.self, forKey: .currency)
     self.unit = try container.decodeIfPresent(String.self, forKey: .unit)
