@@ -49,5 +49,3 @@ public struct SweetfeetItemPriceCheckResponse: Codable, Hashable, Sendable {
     self.unit = try container.decodeIfPresent(String.self, forKey: .unit)
   }
 }
-
-public typealias CashlinePricePerItemInquiryResponse = SweetfeetItemPriceCheckResponse

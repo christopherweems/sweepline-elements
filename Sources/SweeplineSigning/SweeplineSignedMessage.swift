@@ -1,17 +1,17 @@
 public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 
-public struct SweeplineSignedMessage: Hashable, Sendable {
+public struct BeepSignedMessage: Hashable, Sendable {
   public static let algorithm = "ed25519"
 
   public let signatureAlgorithm: String
-  public let keyID: SweeplineKeyID
+  public let keyID: BeepKeyID
   public let publicKeyBase64: String
   public let signatureBase64: String
 
   public init(
     signatureAlgorithm: String = Self.algorithm,
-    keyID: SweeplineKeyID,
+    keyID: BeepKeyID,
     publicKeyBase64: String,
     signatureBase64: String,
   ) {
@@ -26,7 +26,7 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
     signature: some ContiguousBytes,
   ) {
     self.init(
-      keyID: SweeplineKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
+      keyID: BeepKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
       publicKeyBase64: Self.base64EncodedString(publicKeyRawRepresentation),
       signatureBase64: Self.base64EncodedString(signature),
     )
@@ -34,26 +34,32 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
 
   public init(headers: [String: String]) throws {
     var normalizedHeaders: [String: String] = [:]
-    let sweeplineHeaderNames = Set(SweeplineHeader.allCases.map { $0.rawValue.lowercased() })
+    let acceptedHeaders = Dictionary(
+      uniqueKeysWithValues: BeepHeader.allCases.flatMap { header in
+        header.acceptedRawValues.map { ($0.lowercased(), header) }
+      }
+    )
 
     for (key, value) in headers {
       let normalizedKey = key.lowercased()
-      guard sweeplineHeaderNames.contains(normalizedKey) else {
+      guard let header = acceptedHeaders[normalizedKey] else {
         normalizedHeaders[normalizedKey] = value
         continue
       }
 
-      guard normalizedHeaders[normalizedKey] == nil else {
-        throw SweeplineSignedMessageHeaderError.duplicateHeader(normalizedKey)
+      let canonicalKey = header.rawValue.lowercased()
+
+      guard normalizedHeaders[canonicalKey] == nil else {
+        throw BeepSignedMessageHeaderError.duplicateHeader(canonicalKey)
       }
 
-      normalizedHeaders[normalizedKey] = value
+      normalizedHeaders[canonicalKey] = value
     }
 
     let signatureAlgorithm = try Self.headerValue(for: .signatureAlgorithm, in: normalizedHeaders)
     let keyIDRawValue = try Self.headerValue(for: .keyID, in: normalizedHeaders)
-    guard let keyID = SweeplineKeyID(rawValue: keyIDRawValue) else {
-      throw SweeplineSignedMessageHeaderError.invalidKeyID(keyIDRawValue)
+    guard let keyID = BeepKeyID(rawValue: keyIDRawValue) else {
+      throw BeepSignedMessageHeaderError.invalidKeyID(keyIDRawValue)
     }
 
     self.init(
@@ -66,19 +72,19 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
 
   public var headers: [String: String] {
     [
-      SweeplineHeader.signatureAlgorithm.rawValue: signatureAlgorithm,
-      SweeplineHeader.keyID.rawValue: keyID.rawValue,
-      SweeplineHeader.publicKey.rawValue: publicKeyBase64,
-      SweeplineHeader.signature.rawValue: signatureBase64,
+      BeepHeader.signatureAlgorithm.rawValue: signatureAlgorithm,
+      BeepHeader.keyID.rawValue: keyID.rawValue,
+      BeepHeader.publicKey.rawValue: publicKeyBase64,
+      BeepHeader.signature.rawValue: signatureBase64,
     ]
   }
 
   private static func headerValue(
-    for header: SweeplineHeader,
+    for header: BeepHeader,
     in normalizedHeaders: [String: String]
   ) throws -> String {
     guard let value = normalizedHeaders[header.rawValue.lowercased()] else {
-      throw SweeplineSignedMessageHeaderError.missingHeader(header)
+      throw BeepSignedMessageHeaderError.missingHeader(header)
     }
 
     return value
@@ -91,8 +97,8 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
   }
 }
 
-public enum SweeplineSignedMessageHeaderError: Error, Hashable, Sendable {
-  case missingHeader(SweeplineHeader)
+public enum BeepSignedMessageHeaderError: Error, Hashable, Sendable {
+  case missingHeader(BeepHeader)
   case duplicateHeader(String)
   case invalidKeyID(String)
 }

@@ -2,7 +2,7 @@ public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 private import Crypto
 
-public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
+public struct BeepKeyID: RawRepresentable, Hashable, Sendable {
   public let rawValue: String
 
   public init?(rawValue: String) {

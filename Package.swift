@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-  name: "sweepline-elements",
+  name: "sweep-beep",
   platforms: [
     .macOS(.v10_15),
     .iOS(.v13),
@@ -10,6 +10,30 @@ let package = Package(
     .watchOS(.v6),
   ],
   products: [
+    // Signing
+    
+    .library(
+      name: "BeepSigning",
+      targets: ["BeepSigning"]
+    ),
+    
+    // Protocols
+    
+    .library(
+      name: "Sweepline",
+      targets: ["Sweepline"]
+    ),
+    .library(
+      name: "Sweetfeet",
+      targets: ["Sweetfeet"]
+    ),
+    .library(
+      name: "Beeper",
+      targets: ["Beeper"]
+    ),
+    
+    // Legacy
+    
     .library(
       name: "SweeplineElements",
       targets: ["SweeplineElements"]
@@ -22,36 +46,71 @@ let package = Package(
       name: "SweeplineSigning",
       targets: ["SweeplineSigning"]
     ),
+    
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"5.0.0")
-
+    
   ],
   targets: [
     .target(
-      name: "SweeplineSigning",
+      name: "BeepSigning",
       dependencies: [
         .product(name: "Crypto", package: "swift-crypto")
       ],
+      path: "Sources/SweeplineSigning",
     ),
     .target(
-      name: "SweeplineElements",
+      name: "Sweepline",
       dependencies: [
-        "SweeplineSigning",
-        .product(name: "Crypto", package: "swift-crypto"),
+        "BeepSigning",
       ],
       path: "Sources/Protocol/Sweepline",
     ),
     .target(
-      name: "SweetfeetElements",
+      name: "Sweetfeet",
       dependencies: [
-        "SweeplineSigning"
+        "BeepSigning"
       ],
       path: "Sources/Protocol/Sweetfeet",
+    ),
+    .target(
+      name: "Beeper",
+      dependencies: [
+        "BeepSigning"
+      ],
+      path: "Sources/Protocol/Beeper",
+    ),
+    .target(
+      name: "SweeplineSigning",
+      dependencies: [
+        "BeepSigning"
+      ],
+      path: "Sources/Compatibility/SweeplineSigning",
+    ),
+    .target(
+      name: "SweeplineElements",
+      dependencies: [
+        "Sweepline",
+        "SweeplineSigning",
+      ],
+      path: "Sources/Compatibility/SweeplineElements",
+    ),
+    .target(
+      name: "SweetfeetElements",
+      dependencies: [
+        "Sweetfeet",
+        "SweeplineSigning",
+      ],
+      path: "Sources/Compatibility/SweetfeetElements",
     ),
     .testTarget(
       name: "SweeplineElementsTests",
       dependencies: [
+        "BeepSigning",
+        "Sweepline",
+        "Sweetfeet",
+        "Beeper",
         "SweeplineElements",
         "SweetfeetElements",
         "SweeplineSigning",

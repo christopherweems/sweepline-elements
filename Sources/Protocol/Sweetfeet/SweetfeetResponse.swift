@@ -15,5 +15,3 @@ public struct SweetfeetResponse: Codable, Hashable, Sendable {
     case productID = "product-id"
   }
 }
-
-public typealias CashlineResponse = SweetfeetResponse

@@ -1,13 +1,13 @@
 public import protocol Foundation::ContiguousBytes
 
-public struct SweeplineSigner: Sendable {}
+public struct BeepSigner: Sendable {}
 
-extension SweeplineSigner {
+extension BeepSigner {
   public static func signedMessage(
     publicKeyRawRepresentation: some ContiguousBytes,
     signature: some ContiguousBytes
-  ) -> SweeplineSignedMessage {
-    SweeplineSignedMessage(
+  ) -> BeepSignedMessage {
+    BeepSignedMessage(
       publicKeyRawRepresentation: publicKeyRawRepresentation,
       signature: signature
     )

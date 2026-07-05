@@ -1,336 +1,116 @@
-# sweepline-elements
+# sweep-beep
 
-Swift types for reading, verifying, and producing Sweepline protocol messages.
+`sweep-beep` is an umbrella Swift package for a family of signed protocols built on the same Ed25519 HTTP signing rules.
 
-Written to help you get your Sweepline endpoint validating and responding to requests, `sweepline-elements` keeps the wire-format details in one place: request JSON keys, signature header names, Ed25519 verification, and public-key fingerprinting. 
+Primary modules:
 
-App developers: `sweepline-elements` could be useful in your Sweepline client (iOS, Windows Phone, Chromebook – and we're looking for a solid Android implementation to point people to).
+- `BeepSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction.
+- `Sweepline` for gesture and interaction payloads.
+- `Sweetfeet` for commerce and event payloads.
+- `Beeper` for minimal signed messages.
 
-## The Protocol
-
-Sweepline clients send a JSON request body (see `Request Payload`) via HTTP POST plus four signature headers:
-
-```http
-X-Sweepline-Signature-Algorithm: ed25519
-X-Sweepline-Key-ID: <16-character-key-id>
-X-Sweepline-Public-Key: <base64-raw-ed25519-public-key>
-X-Sweepline-Signature: <base64-ed25519-signature>
-```
-
-## Packages
-
-`SweeplineElements` provides:
-
-- `SweeplineRequest` for decoding the request JSON payload.
-- `SweeplineResponse` for encoding and decoding endpoint response JSON.
-
-`SweetfeetElements` provides:
-
-- `SweetfeetRequest` for a single business event request.
-- `SweetfeetResponse` for a minimal response model.
-- `SweetfeetEventType` for the initial Sweetfeet event types.
-
-`SweeplineSigning` provides:
-
-- `SweeplineSignedMessage` for parsing and emitting signature metadata.
-- `SweeplineVerifier` for verifying a signed request body.
-- `SweeplineKeyID` for the shared key ID derivation algorithm.
-- `SweeplineHeader` for the canonical HTTP header names.
-- `SweeplineSigner` for building a signed-message container from raw bytes.
-
-All three modules keep the same signing contract for request bodies and metadata.
-
-It does not own server routing, replay protection, authorization, key storage policy, or client Keychain behavior.
-
-`Sweepline Elements` is MIT licensed so endpoint authors, app developers, hardware tinkerers, and commercial teams can use the protocol helpers freely.
-
+Every protocol in the family is payload-agnostic at the signing layer: the signature covers the raw HTTP request body bytes, and protocol meaning lives entirely in the JSON body.
 
 ## Installation
 
-Add the package to your server target:
-
 ```swift
-.package(url: "https://github.com/christopherweems/sweepline-elements.git", from: "1.1.0")
+.package(url: "https://github.com/christopherweems/sweepline-elements.git", branch: "beeper")
 ```
 
-Then add the product dependency:
+Products:
 
 ```swift
-.product(name: "SweeplineElements", package: "sweepline-elements")
+.product(name: "BeepSigning", package: "sweep-beep")
+.product(name: "Sweepline", package: "sweep-beep")
+.product(name: "Sweetfeet", package: "sweep-beep")
+.product(name: "Beeper", package: "sweep-beep")
 ```
 
-If you only need the shared signing helpers:
+Deprecated compatibility products remain available during migration:
 
-```swift
-.product(name: "SweeplineSigning", package: "sweepline-elements")
+- `SweeplineElements`
+- `SweetfeetElements`
+- `SweeplineSigning`
+
+## Signing
+
+`BeepSigning` emits canonical `X-Beeper-*` headers:
+
+```http
+X-Beeper-Signature-Algorithm: ed25519
+X-Beeper-Key-ID: <16-character-key-id>
+X-Beeper-Public-Key: <base64-raw-ed25519-public-key>
+X-Beeper-Signature: <base64-ed25519-signature>
 ```
 
-If you need the Sweetfeet models:
-
-```swift
-.product(name: "SweetfeetElements", package: "sweepline-elements")
-```
-
-
-## Verifying An Incoming Request
-
-Verify the exact body bytes received over HTTP. Do not re-encode JSON before verification; even semantically equivalent JSON can produce different bytes and fail signature verification.
-
-```swift
-import Foundation
-import SweeplineElements
-
-func handleSweeplineRequest(
-    body: Data,
-    headers: [String: String]
-) throws -> SweeplineRequest {
-    let signedMessage = try SweeplineSignedMessage(headers: headers)
-    let verifier = SweeplineVerifier()
-
-    switch try verifier.verificationResult(body: body, signedMessage: signedMessage) {
-    case .valid:
-        break
-    case .invalidSignature:
-        throw RequestError.unauthorized
-    }
-
-    let decoder = JSONDecoder()
-    decoder.dateDecodingStrategy = .iso8601
-    return try decoder.decode(SweeplineRequest.self, from: body)
-}
-```
-
-`SweeplineSignedMessage.init(headers:)` treats header names case-insensitively, which matches HTTP header semantics.
-
-If you only need to parse, verify, or emit signature metadata, import `SweeplineSigning` directly:
+Verification accepts both `X-Beeper-*` and legacy `X-Sweepline-*` header families during the transition. If both families provide the same semantic header in one request, parsing fails as a duplicate-header error.
 
 ```swift
 import Foundation
-import SweeplineSigning
-```
+import BeepSigning
 
-
-## Request Payload
-
-A Sweepline request contains exactly one contact signal. Current request bodies use `is-tap`, `is-yes`, or `is-down`; requests can also include `contact-type` to identify the active contact lane.
-
-```json
-{
-  "is-yes": true,
-  "date": "2026-05-24T16:20:00Z",
-  "idempotency-id": "7E3F9C6B-3E2D-4985-A17B-3F4B2D51F1AA",
-  "sender-id": "kobe-bryant",
-  "zone-id": "staples-center",
-  "duration-held": 81.00,
-  "is-first-contact": true,
-  "contact-type": "yes",
+func verify(body: Data, headers: [String: String]) throws -> Bool {
+  let signedMessage = try BeepSignedMessage(headers: headers)
+  return try BeepVerifier().verify(body: body, signedMessage: signedMessage)
 }
 ```
 
-Fields:
-
-- `is-tap`: Boolean tap/release state. Present when `verb == .tap`.
-- `is-yes`: Boolean yes/no state. Present when `verb == .yes`.
-- `is-down`: Boolean down/up state. Present when `verb == .down`.
-- `contact-type`: Optional contact type for requests carrying an explicit contact lane. Taps sent alongside down/up interaction send `down`.
-- `date`: Client timestamp.
-- `idempotency-id`: Client-generated idempotency token. Servers should use this for replay/idempotency handling.
-- `sender-id`: Optional client sender identifier.
-- `zone-id`: Optional endpoint zone identifier.
-- `duration-held` (*): Optional hold duration in seconds.
-- `is-first-contact` (*): Optional flag set when this request is the sender's first contact with the endpoint.
-
-`SweeplineRequest` rejects payloads with more than one of `is-tap`, `is-yes`, or `is-down`, and also rejects payloads with no contact signal.
-
-
-## Response Payload
-
-An endpoint response identifies the protocol version and exactly one contact signal:
-
-```json
-{
-  "sweepline-version": "1.1",
-  "is-yes": true,
-  "destination-url": "https://example.com/contact"
-}
-```
-
-Fields:
-
-- `sweepline-version`: Protocol version. `SweeplineResponse` currently supports `1.1`.
-- `contact-mode`: Specifies lane offered for gesturing, or the contact type. Send by itself when asking the client to switch modes before a value exists; include it with a matching value specifier when desired.
-- `is-yes`: Boolean yes/no state, expresses interaction's result for `yes` verb.
-- `is-down`: Optional boolean down/up state for a `down` verb.
-- `destination-url`: Optional landing URL client presents after server's acknowledgement of gesture.
-
-
-## Signature Contract
-
-Sweepline signatures use Ed25519 over the raw HTTP request body bytes.
-
-Verification performs these checks:
-
-1. `X-Sweepline-Signature-Algorithm` must be `ed25519`, case-insensitive.
-2. `X-Sweepline-Public-Key` must be valid base64 raw Ed25519 public-key bytes.
-3. `X-Sweepline-Signature` must be valid base64 signature bytes.
-4. `X-Sweepline-Key-ID` must match the supplied public key.
-5. The signature must verify against the exact body bytes.
-
-Malformed metadata throws `SweeplineVerificationError`. A well-formed message with a bad signature returns `.invalidSignature` from `verificationResult(...)` or `false` from `verify(...)`.
-
-
-## Key IDs
-
-A Sweepline Key ID is a short public-key fingerprint:
-
-```text
-lowercaseHex(first 8 bytes of SHA256(rawEd25519PublicKeyBytes))
-```
-
-That yields a 16-character lowercase hex string. The Key ID is not a secret and is not an authorization decision by itself. Use it as a compact identifier for logging, lookup, and comparing the supplied public key against the signed message metadata.
+If you already have body bytes plus a public key and signature, you can construct a canonical signed request:
 
 ```swift
-let keyID = SweeplineKeyID(publicKeyRawRepresentation: publicKeyData)
-print(keyID.rawValue)
-```
-
-## Header Names
-
-Use `SweeplineHeader` rather than string literals when possible:
-
-```swift
-let keyIDHeader = SweeplineHeader.keyID.rawValue
-```
-
-Canonical names:
-
-```text
-X-Sweepline-Signature-Algorithm
-X-Sweepline-Key-ID
-X-Sweepline-Public-Key
-X-Sweepline-Signature
-```
-
-## Server Responsibilities
-
-This package verifies message integrity. Servers still need to decide policy.
-
-Recommended server-side checks:
-
-- Enforce HTTPS at the edge. (ATS requires it.)
-- Verify the signature before decoding and acting on the body.
-- Store processed `idempotency-id` values for replay/idempotency handling.
-- Decide whether a public key is allowed for a route, account, sender, or zone.
-- Log the Key ID and route outcome, but avoid logging full request bodies if they contain sensitive data.
-
-
-## Producing Signed Messages
-
-Most server code only verifies requests. For tests, tools, or server-to-server flows, use `SweeplineSigner` when you already have raw public key and signature bytes:
-
-```swift
-let signedMessage = SweeplineSigner.signedMessage(
-    publicKeyRawRepresentation: publicKeyData,
-    signature: signatureData
+let canonicalRequest = BeepSigner.canonicalRequest(
+  body: body,
+  publicKeyRawRepresentation: publicKeyData,
+  signature: signatureData
 )
 
-let headers = signedMessage.headers
+let headers = canonicalRequest.headers
 ```
+
+## Sweepline
+
+`Sweepline` models signed gesture and interaction requests and responses:
+
+- `SweeplineRequest`
+- `SweeplineResponse`
+- `SweeplineVerb`
+- `SweeplineVersion`
 
 ## Sweetfeet
 
-`SweetfeetElements` uses the same signing metadata and header names as Sweepline, but keeps its own request and response models.
+`Sweetfeet` models signed commerce and event payloads:
 
-```swift
-import SweetfeetElements
-```
+- `SweetfeetRequest`
+- `SweetfeetResponse`
+- `SweetfeetItemPriceCheckRequest`
+- `SweetfeetItemPriceCheckResponse`
+- `SweetfeetEventType`
 
-`SweetfeetRequest` models a single business event:
+## Beeper
 
-- `tap`
-- `sale`
-- `item-price-check`
+`Beeper` models a minimal signed messaging payload with:
 
-The sale request format includes:
-
-- `event-type`
+- `title`
+- `topic`
+- `message`
+- `message-id`
 - `date`
-- `idempotency-id`
-- `sender-id`
-- `zone-id`
-- `product-id`
-- `quantity`
-- `unit` optional
-- `price-per-item`
-- `currency`
-- `payment-options` optional
-- `note`
-- `expiration-date` optional
 
 ```swift
-import Foundation
-import SweetfeetElements
+import Beeper
 
-let request = SweetfeetRequest(
-    eventType: .sale,
-    senderID: "christopher",
-    zoneID: "front-desk",
-    productID: "fz-003",
-    quantity: 3,
-    pricePerItem: "5.00",
-    currency: "USD",
-    paymentOptions: [
-        SweetfeetPaymentOption(amount: "2", currency: "USD"),
-        SweetfeetPaymentOption(description: "lightly used iPod mini"),
-    ],
-    note: "fruit appears bruised",
-    expirationDate: Date(timeIntervalSince1970: 1_780_244_400),
-    date: Date(timeIntervalSince1970: 0),
-    idempotencyID: "sale-001"
-)
-
-let encoder = JSONEncoder()
-encoder.dateEncodingStrategy = .iso8601
-let data = try encoder.encode(request)
-
-let decoder = JSONDecoder()
-decoder.dateDecodingStrategy = .iso8601
-let decoded = try decoder.decode(SweetfeetRequest.self, from: data)
-```
-
-`SweetfeetPricePerItemInquiryRequest` requests the current price for a known product ID without including sale-only fields such as quantity, price, or payment options.
-
-```swift
-let inquiry = SweetfeetPricePerItemInquiryRequest(
-    senderID: "christopher",
-    zoneID: "front-desk",
-    productID: "fz-003",
-    date: Date(timeIntervalSince1970: 0),
-    idempotencyID: "price-inquiry-001"
+let message = BeeperMessage(
+  title: "Front desk",
+  topic: "arrival",
+  message: "Package waiting",
+  messageID: "beep-001",
+  date: Date()
 )
 ```
 
-When a server has a price for the product, it can return `SweetfeetPricePerItemInquiryResponse`:
+## Migration
 
-```json
-{
-  "product-id": "fz-003",
-  "price-per-item": "5.00",
-  "currency": "USD",
-}
-```
-
-If the server does not have a price for the product, the protocol expects the server return a 404 or other error status code.
-
-`SweetfeetElements` uses the same signature metadata contract as Sweepline, so a Sweetfeet endpoint can reuse `SweeplineSigning` for header parsing and verification unchanged.
-
-## Notes around use of project name
-
-“Sweepline” compatibility means following the public Sweepline protocol.
-Use of this code does not imply endorsement by the Sweepline app or its author.
-You can describe an implementation, product, service, device, or integration as `Sweepline-compatible`, but do not call your product `Sweepline`.
-
-## Questions, Comments, Concerns 
-### (This could have been a pull request?)
-
-https://christopherweems.com/contact
+- Prefer `BeepSigning`, `Sweepline`, `Sweetfeet`, and `Beeper` for new code.
+- `SweeplineSigning`, `SweeplineElements`, and `SweetfeetElements` remain available as deprecated compatibility products.
+- Legacy `Sweepline*` signing APIs remain available as deprecated wrappers where practical.
+- `Cashline*` aliases have been removed.

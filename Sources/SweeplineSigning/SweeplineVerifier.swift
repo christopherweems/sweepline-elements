@@ -1,20 +1,20 @@
 public import struct Foundation::Data
 private import Crypto
 
-public struct SweeplineVerifier: Sendable {
+public struct BeepVerifier: Sendable {
   public init() {}
 }
 
-extension SweeplineVerifier {
-  public func verify(body: Data, signedMessage: SweeplineSignedMessage) throws -> Bool {
+extension BeepVerifier {
+  public func verify(body: Data, signedMessage: BeepSignedMessage) throws -> Bool {
     try verificationResult(body: body, signedMessage: signedMessage) == .valid
   }
 
   public func verificationResult(
     body: Data,
-    signedMessage: SweeplineSignedMessage
-  ) throws(SweeplineVerificationError) -> SweeplineVerificationResult {
-    guard signedMessage.signatureAlgorithm.lowercased() == SweeplineSignedMessage.algorithm else {
+    signedMessage: BeepSignedMessage
+  ) throws(BeepVerificationError) -> BeepVerificationResult {
+    guard signedMessage.signatureAlgorithm.lowercased() == BeepSignedMessage.algorithm else {
       throw .unsupportedSignatureAlgorithm(signedMessage.signatureAlgorithm)
     }
 
@@ -25,7 +25,7 @@ extension SweeplineVerifier {
       throw .invalidSignatureBase64
     }
 
-    let computedKeyID = SweeplineKeyID(publicKeyRawRepresentation: publicKeyData)
+    let computedKeyID = BeepKeyID(publicKeyRawRepresentation: publicKeyData)
     guard computedKeyID == signedMessage.keyID else {
       throw .keyIDMismatch(expected: computedKeyID, actual: signedMessage.keyID)
     }
@@ -39,15 +39,15 @@ extension SweeplineVerifier {
   }
 }
 
-public enum SweeplineVerificationResult: Hashable, Sendable {
+public enum BeepVerificationResult: Hashable, Sendable {
   case valid
   case invalidSignature
 }
 
-public enum SweeplineVerificationError: Error, Hashable, Sendable {
+public enum BeepVerificationError: Error, Hashable, Sendable {
   case unsupportedSignatureAlgorithm(String)
   case invalidPublicKeyBase64
   case invalidSignatureBase64
   case invalidPublicKey
-  case keyIDMismatch(expected: SweeplineKeyID, actual: SweeplineKeyID)
+  case keyIDMismatch(expected: BeepKeyID, actual: BeepKeyID)
 }

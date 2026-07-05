@@ -1,4 +1,4 @@
-@_exported public import SweeplineSigning
+@_exported public import BeepSigning
 public import struct Foundation.Date
 
 public struct SweetfeetItemPriceCheckRequest: Codable, Hashable, Sendable {
@@ -52,5 +52,3 @@ public struct SweetfeetItemPriceCheckRequest: Codable, Hashable, Sendable {
     self.idempotencyID = try container.decode(String.self, forKey: .idempotencyID)
   }
 }
-
-public typealias CashlinePricePerItemInquiryRequest = SweetfeetItemPriceCheckRequest

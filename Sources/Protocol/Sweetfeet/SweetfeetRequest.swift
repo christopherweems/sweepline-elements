@@ -1,4 +1,4 @@
-@_exported public import SweeplineSigning
+@_exported public import BeepSigning
 public import struct Foundation::Date
 public import struct Foundation::TimeInterval
 
@@ -87,5 +87,3 @@ public struct SweetfeetPaymentOption: Codable, Hashable, Sendable {
     self.description = description
   }
 }
-
-public typealias CashlineRequest = SweetfeetRequest
