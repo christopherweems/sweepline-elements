@@ -1,6 +1,6 @@
-# sweep-beep
+# beeper
 
-`sweep-beep` is an umbrella Swift package for a family of signed protocols built on the same Ed25519 HTTP signing rules.
+`beeper` is an umbrella Swift package for a family of signed protocols built on the same Ed25519 HTTP signing rules.
 
 Primary modules:
 
@@ -20,10 +20,10 @@ Every protocol in the family is payload-agnostic at the signing layer: the signa
 Products:
 
 ```swift
-.product(name: "BeepSigning", package: "sweep-beep")
-.product(name: "Sweepline", package: "sweep-beep")
-.product(name: "Sweetfeet", package: "sweep-beep")
-.product(name: "Beeper", package: "sweep-beep")
+.product(name: "BeepSigning", package: "beeper")
+.product(name: "Sweepline", package: "beeper")
+.product(name: "Sweetfeet", package: "beeper")
+.product(name: "Beeper", package: "beeper")
 ```
 
 Deprecated compatibility products remain available during migration:
