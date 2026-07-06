@@ -189,8 +189,8 @@ extension SweeplineVerifier {
         signedMessage: signedMessage.beepSignedMessage
       )
       return SweeplineVerificationResult(result)
-    } catch let error as BeepVerificationError {
-      throw SweeplineVerificationError(error)
+    } catch {
+      throw SweeplineVerificationError(error as! BeepVerificationError)
     }
   }
 }
