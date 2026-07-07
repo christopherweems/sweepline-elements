@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-  name: "sweep-beep",
+  name: "beepline-elements",
   platforms: [
     .macOS(.v10_15),
     .iOS(.v13),
@@ -13,8 +13,8 @@ let package = Package(
     // Signing
     
     .library(
-      name: "BeepSigning",
-      targets: ["BeepSigning"]
+      name: "BeeplineSigning",
+      targets: ["BeeplineSigning"]
     ),
     
     // Protocols
@@ -32,7 +32,7 @@ let package = Package(
       targets: ["Beeper"]
     ),
     
-    // Legacy
+    // Compatibility
     
     .library(
       name: "SweeplineElements",
@@ -54,37 +54,37 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "BeepSigning",
+      name: "BeeplineSigning",
       dependencies: [
         .product(name: "Crypto", package: "swift-crypto")
       ],
-      path: "Sources/SweeplineSigning",
+      path: "Sources/Signing",
     ),
     .target(
       name: "Sweepline",
       dependencies: [
-        "BeepSigning",
+        "BeeplineSigning",
       ],
       path: "Sources/Protocol/Sweepline",
     ),
     .target(
       name: "Sweetfeet",
       dependencies: [
-        "BeepSigning"
+        "BeeplineSigning"
       ],
       path: "Sources/Protocol/Sweetfeet",
     ),
     .target(
       name: "Beeper",
       dependencies: [
-        "BeepSigning"
+        "BeeplineSigning"
       ],
       path: "Sources/Protocol/Beeper",
     ),
     .target(
       name: "SweeplineSigning",
       dependencies: [
-        "BeepSigning"
+        "BeeplineSigning"
       ],
       path: "Sources/Compatibility/SweeplineSigning",
     ),
@@ -107,7 +107,7 @@ let package = Package(
     .testTarget(
       name: "SweeplineElementsTests",
       dependencies: [
-        "BeepSigning",
+        "BeeplineSigning",
         "Sweepline",
         "Sweetfeet",
         "Beeper",

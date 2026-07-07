@@ -1,10 +1,10 @@
-# beeper
+# beepline-elements
 
-`beeper` is an umbrella Swift package for a family of signed protocols built on the same Ed25519 HTTP signing rules.
+`beepline-elements` is an umbrella Swift package for a family of signed protocols built on the same Ed25519 HTTP signing rules.
 
 Primary modules:
 
-- `BeepSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction.
+- `BeeplineSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction.
 - `Sweepline` for gesture and interaction payloads.
 - `Sweetfeet` for commerce and event payloads.
 - `Beeper` for minimal signed messages.
@@ -14,16 +14,16 @@ Every protocol in the family is payload-agnostic at the signing layer: the signa
 ## Installation
 
 ```swift
-.package(url: "https://github.com/christopherweems/sweepline-elements.git", branch: "beeper")
+.package(url: "https://github.com/christopherweems/beepline-elements.git", branch: "main")
 ```
 
 Products:
 
 ```swift
-.product(name: "BeepSigning", package: "beeper")
-.product(name: "Sweepline", package: "beeper")
-.product(name: "Sweetfeet", package: "beeper")
-.product(name: "Beeper", package: "beeper")
+.product(name: "BeeplineSigning", package: "beepline-elements")
+.product(name: "Sweepline", package: "beepline-elements")
+.product(name: "Sweetfeet", package: "beepline-elements")
+.product(name: "Beeper", package: "beepline-elements")
 ```
 
 Deprecated compatibility products remain available during migration:
@@ -34,31 +34,31 @@ Deprecated compatibility products remain available during migration:
 
 ## Signing
 
-`BeepSigning` emits canonical `X-Beeper-*` headers:
+`BeeplineSigning` emits canonical `X-Beepline-*` headers:
 
 ```http
-X-Beeper-Signature-Algorithm: ed25519
-X-Beeper-Key-ID: <16-character-key-id>
-X-Beeper-Public-Key: <base64-raw-ed25519-public-key>
-X-Beeper-Signature: <base64-ed25519-signature>
+X-Beepline-Signature-Algorithm: ed25519
+X-Beepline-Key-ID: <16-character-key-id>
+X-Beepline-Public-Key: <base64-raw-ed25519-public-key>
+X-Beepline-Signature: <base64-ed25519-signature>
 ```
 
-Verification accepts both `X-Beeper-*` and legacy `X-Sweepline-*` header families during the transition. If both families provide the same semantic header in one request, parsing fails as a duplicate-header error.
+Verification accepts both `X-Beepline-*` and legacy `X-Sweepline-*` header families during the transition. If both families provide the same semantic header in one request, parsing fails as a duplicate-header error.
 
 ```swift
 import Foundation
-import BeepSigning
+import BeeplineSigning
 
 func verify(body: Data, headers: [String: String]) throws -> Bool {
-  let signedMessage = try BeepSignedMessage(headers: headers)
-  return try BeepVerifier().verify(body: body, signedMessage: signedMessage)
+  let signedMessage = try BeeplineSignedMessage(headers: headers)
+  return try BeeplineVerifier().verify(body: body, signedMessage: signedMessage)
 }
 ```
 
 If you already have body bytes plus a public key and signature, you can construct a canonical signed request:
 
 ```swift
-let canonicalRequest = BeepSigner.canonicalRequest(
+let canonicalRequest = BeeplineSigner.canonicalRequest(
   body: body,
   publicKeyRawRepresentation: publicKeyData,
   signature: signatureData
@@ -110,7 +110,7 @@ let message = BeeperMessage(
 
 ## Migration
 
-- Prefer `BeepSigning`, `Sweepline`, `Sweetfeet`, and `Beeper` for new code.
+- Prefer `BeeplineSigning`, `Sweepline`, `Sweetfeet`, and `Beeper` for new code.
 - `SweeplineSigning`, `SweeplineElements`, and `SweetfeetElements` remain available as deprecated compatibility products.
 - Legacy `Sweepline*` signing APIs remain available as deprecated wrappers where practical.
 - `Cashline*` aliases have been removed.

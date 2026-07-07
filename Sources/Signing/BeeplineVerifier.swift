@@ -1,20 +1,20 @@
 public import struct Foundation::Data
 private import Crypto
 
-public struct BeepVerifier: Sendable {
+public struct BeeplineVerifier: Sendable {
   public init() {}
 }
 
-extension BeepVerifier {
-  public func verify(body: Data, signedMessage: BeepSignedMessage) throws -> Bool {
+extension BeeplineVerifier {
+  public func verify(body: Data, signedMessage: BeeplineSignedMessage) throws -> Bool {
     try verificationResult(body: body, signedMessage: signedMessage) == .valid
   }
 
   public func verificationResult(
     body: Data,
-    signedMessage: BeepSignedMessage
-  ) throws(BeepVerificationError) -> BeepVerificationResult {
-    guard signedMessage.signatureAlgorithm.lowercased() == BeepSignedMessage.algorithm else {
+    signedMessage: BeeplineSignedMessage
+  ) throws(BeeplineVerificationError) -> BeeplineVerificationResult {
+    guard signedMessage.signatureAlgorithm.lowercased() == BeeplineSignedMessage.algorithm else {
       throw .unsupportedSignatureAlgorithm(signedMessage.signatureAlgorithm)
     }
 
@@ -25,7 +25,7 @@ extension BeepVerifier {
       throw .invalidSignatureBase64
     }
 
-    let computedKeyID = BeepKeyID(publicKeyRawRepresentation: publicKeyData)
+    let computedKeyID = BeeplineKeyID(publicKeyRawRepresentation: publicKeyData)
     guard computedKeyID == signedMessage.keyID else {
       throw .keyIDMismatch(expected: computedKeyID, actual: signedMessage.keyID)
     }
@@ -39,15 +39,15 @@ extension BeepVerifier {
   }
 }
 
-public enum BeepVerificationResult: Hashable, Sendable {
+public enum BeeplineVerificationResult: Hashable, Sendable {
   case valid
   case invalidSignature
 }
 
-public enum BeepVerificationError: Error, Hashable, Sendable {
+public enum BeeplineVerificationError: Error, Hashable, Sendable {
   case unsupportedSignatureAlgorithm(String)
   case invalidPublicKeyBase64
   case invalidSignatureBase64
   case invalidPublicKey
-  case keyIDMismatch(expected: BeepKeyID, actual: BeepKeyID)
+  case keyIDMismatch(expected: BeeplineKeyID, actual: BeeplineKeyID)
 }

@@ -1,17 +1,17 @@
 public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 
-public struct BeepSignedMessage: Hashable, Sendable {
+public struct BeeplineSignedMessage: Hashable, Sendable {
   public static let algorithm = "ed25519"
 
   public let signatureAlgorithm: String
-  public let keyID: BeepKeyID
+  public let keyID: BeeplineKeyID
   public let publicKeyBase64: String
   public let signatureBase64: String
 
   public init(
     signatureAlgorithm: String = Self.algorithm,
-    keyID: BeepKeyID,
+    keyID: BeeplineKeyID,
     publicKeyBase64: String,
     signatureBase64: String,
   ) {
@@ -26,7 +26,7 @@ public struct BeepSignedMessage: Hashable, Sendable {
     signature: some ContiguousBytes,
   ) {
     self.init(
-      keyID: BeepKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
+      keyID: BeeplineKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
       publicKeyBase64: Self.base64EncodedString(publicKeyRawRepresentation),
       signatureBase64: Self.base64EncodedString(signature),
     )
@@ -35,7 +35,7 @@ public struct BeepSignedMessage: Hashable, Sendable {
   public init(headers: [String: String]) throws {
     var normalizedHeaders: [String: String] = [:]
     let acceptedHeaders = Dictionary(
-      uniqueKeysWithValues: BeepHeader.allCases.flatMap { header in
+      uniqueKeysWithValues: BeeplineHeader.allCases.flatMap { header in
         header.acceptedRawValues.map { ($0.lowercased(), header) }
       }
     )
@@ -50,7 +50,7 @@ public struct BeepSignedMessage: Hashable, Sendable {
       let canonicalKey = header.rawValue.lowercased()
 
       guard normalizedHeaders[canonicalKey] == nil else {
-        throw BeepSignedMessageHeaderError.duplicateHeader(canonicalKey)
+        throw BeeplineSignedMessageHeaderError.duplicateHeader(canonicalKey)
       }
 
       normalizedHeaders[canonicalKey] = value
@@ -58,8 +58,8 @@ public struct BeepSignedMessage: Hashable, Sendable {
 
     let signatureAlgorithm = try Self.headerValue(for: .signatureAlgorithm, in: normalizedHeaders)
     let keyIDRawValue = try Self.headerValue(for: .keyID, in: normalizedHeaders)
-    guard let keyID = BeepKeyID(rawValue: keyIDRawValue) else {
-      throw BeepSignedMessageHeaderError.invalidKeyID(keyIDRawValue)
+    guard let keyID = BeeplineKeyID(rawValue: keyIDRawValue) else {
+      throw BeeplineSignedMessageHeaderError.invalidKeyID(keyIDRawValue)
     }
 
     self.init(
@@ -72,19 +72,19 @@ public struct BeepSignedMessage: Hashable, Sendable {
 
   public var headers: [String: String] {
     [
-      BeepHeader.signatureAlgorithm.rawValue: signatureAlgorithm,
-      BeepHeader.keyID.rawValue: keyID.rawValue,
-      BeepHeader.publicKey.rawValue: publicKeyBase64,
-      BeepHeader.signature.rawValue: signatureBase64,
+      BeeplineHeader.signatureAlgorithm.rawValue: signatureAlgorithm,
+      BeeplineHeader.keyID.rawValue: keyID.rawValue,
+      BeeplineHeader.publicKey.rawValue: publicKeyBase64,
+      BeeplineHeader.signature.rawValue: signatureBase64,
     ]
   }
 
   private static func headerValue(
-    for header: BeepHeader,
+    for header: BeeplineHeader,
     in normalizedHeaders: [String: String]
   ) throws -> String {
     guard let value = normalizedHeaders[header.rawValue.lowercased()] else {
-      throw BeepSignedMessageHeaderError.missingHeader(header)
+      throw BeeplineSignedMessageHeaderError.missingHeader(header)
     }
 
     return value
@@ -97,8 +97,11 @@ public struct BeepSignedMessage: Hashable, Sendable {
   }
 }
 
-public enum BeepSignedMessageHeaderError: Error, Hashable, Sendable {
-  case missingHeader(BeepHeader)
+public enum BeeplineSignedMessageHeaderError: Error, Hashable, Sendable {
+  case missingHeader(BeeplineHeader)
   case duplicateHeader(String)
   case invalidKeyID(String)
 }
+
+public typealias BeepSignedMessage = BeeplineSignedMessage
+public typealias BeepSignedMessageHeaderError = BeeplineSignedMessageHeaderError

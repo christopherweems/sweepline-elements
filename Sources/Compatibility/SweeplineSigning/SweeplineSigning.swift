@@ -1,15 +1,15 @@
-@_exported public import BeepSigning
+@_exported public import BeeplineSigning
 public import struct Foundation::Data
 public import protocol Foundation::ContiguousBytes
 
-@available(*, deprecated, renamed: "BeepHeader")
+@available(*, deprecated, renamed: "BeeplineHeader")
 public enum SweeplineHeader: String, CaseIterable, Sendable {
   case signatureAlgorithm = "X-Sweepline-Signature-Algorithm"
   case keyID = "X-Sweepline-Key-ID"
   case publicKey = "X-Sweepline-Public-Key"
   case signature = "X-Sweepline-Signature"
 
-  var beepHeader: BeepHeader {
+  var beeplineHeader: BeeplineHeader {
     switch self {
     case .signatureAlgorithm:
       .signatureAlgorithm
@@ -22,8 +22,8 @@ public enum SweeplineHeader: String, CaseIterable, Sendable {
     }
   }
 
-  init(_ beepHeader: BeepHeader) {
-    switch beepHeader {
+  init(_ beeplineHeader: BeeplineHeader) {
+    switch beeplineHeader {
     case .signatureAlgorithm:
       self = .signatureAlgorithm
     case .keyID:
@@ -36,12 +36,12 @@ public enum SweeplineHeader: String, CaseIterable, Sendable {
   }
 }
 
-@available(*, deprecated, renamed: "BeepKeyID")
+@available(*, deprecated, renamed: "BeeplineKeyID")
 public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
   public let rawValue: String
 
   public init?(rawValue: String) {
-    guard let keyID = BeepKeyID(rawValue: rawValue) else {
+    guard let keyID = BeeplineKeyID(rawValue: rawValue) else {
       return nil
     }
 
@@ -49,21 +49,21 @@ public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
   }
 
   public init(publicKeyRawRepresentation: some ContiguousBytes) {
-    self.rawValue = BeepKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation).rawValue
+    self.rawValue = BeeplineKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation).rawValue
   }
 
-  init(_ keyID: BeepKeyID) {
+  init(_ keyID: BeeplineKeyID) {
     self.rawValue = keyID.rawValue
   }
 
-  var beepKeyID: BeepKeyID {
-    BeepKeyID(rawValue: rawValue)!
+  var beeplineKeyID: BeeplineKeyID {
+    BeeplineKeyID(rawValue: rawValue)!
   }
 }
 
-@available(*, deprecated, renamed: "BeepSignedMessage")
+@available(*, deprecated, renamed: "BeeplineSignedMessage")
 public struct SweeplineSignedMessage: Hashable, Sendable {
-  public static let algorithm = BeepSignedMessage.algorithm
+  public static let algorithm = BeeplineSignedMessage.algorithm
 
   public let signatureAlgorithm: String
   public let keyID: SweeplineKeyID
@@ -88,11 +88,11 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
   ) {
     self.init(
       keyID: SweeplineKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
-      publicKeyBase64: BeepSignedMessage(
+      publicKeyBase64: BeeplineSignedMessage(
         publicKeyRawRepresentation: publicKeyRawRepresentation,
         signature: signature
       ).publicKeyBase64,
-      signatureBase64: BeepSignedMessage(
+      signatureBase64: BeeplineSignedMessage(
         publicKeyRawRepresentation: publicKeyRawRepresentation,
         signature: signature
       ).signatureBase64
@@ -101,23 +101,23 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
 
   public init(headers: [String: String]) throws {
     do {
-      self.init(try BeepSignedMessage(headers: headers))
-    } catch let error as BeepSignedMessageHeaderError {
+      self.init(try BeeplineSignedMessage(headers: headers))
+    } catch let error as BeeplineSignedMessageHeaderError {
       throw SweeplineSignedMessageHeaderError(error)
     }
   }
 
-  init(_ signedMessage: BeepSignedMessage) {
+  init(_ signedMessage: BeeplineSignedMessage) {
     self.signatureAlgorithm = signedMessage.signatureAlgorithm
     self.keyID = SweeplineKeyID(signedMessage.keyID)
     self.publicKeyBase64 = signedMessage.publicKeyBase64
     self.signatureBase64 = signedMessage.signatureBase64
   }
 
-  var beepSignedMessage: BeepSignedMessage {
-    BeepSignedMessage(
+  var beeplineSignedMessage: BeeplineSignedMessage {
+    BeeplineSignedMessage(
       signatureAlgorithm: signatureAlgorithm,
-      keyID: keyID.beepKeyID,
+      keyID: keyID.beeplineKeyID,
       publicKeyBase64: publicKeyBase64,
       signatureBase64: signatureBase64
     )
@@ -133,18 +133,18 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
   }
 }
 
-@available(*, deprecated, renamed: "BeepSignedMessageHeaderError")
+@available(*, deprecated, renamed: "BeeplineSignedMessageHeaderError")
 public enum SweeplineSignedMessageHeaderError: Error, Hashable, Sendable {
   case missingHeader(SweeplineHeader)
   case duplicateHeader(String)
   case invalidKeyID(String)
 
-  init(_ error: BeepSignedMessageHeaderError) {
+  init(_ error: BeeplineSignedMessageHeaderError) {
     switch error {
     case .missingHeader(let header):
       self = .missingHeader(SweeplineHeader(header))
     case .duplicateHeader(let header):
-      let legacyHeader = BeepHeader.allCases.first { $0.rawValue.lowercased() == header }?.legacyRawValue
+      let legacyHeader = BeeplineHeader.allCases.first { $0.rawValue.lowercased() == header }?.legacyRawValue
       self = .duplicateHeader(legacyHeader?.lowercased() ?? header)
     case .invalidKeyID(let keyID):
       self = .invalidKeyID(keyID)
@@ -152,7 +152,7 @@ public enum SweeplineSignedMessageHeaderError: Error, Hashable, Sendable {
   }
 }
 
-@available(*, deprecated, renamed: "BeepSigner")
+@available(*, deprecated, renamed: "BeeplineSigner")
 public struct SweeplineSigner: Sendable {}
 
 extension SweeplineSigner {
@@ -161,7 +161,7 @@ extension SweeplineSigner {
     signature: some ContiguousBytes
   ) -> SweeplineSignedMessage {
     SweeplineSignedMessage(
-      BeepSigner.signedMessage(
+      BeeplineSigner.signedMessage(
         publicKeyRawRepresentation: publicKeyRawRepresentation,
         signature: signature
       )
@@ -169,7 +169,7 @@ extension SweeplineSigner {
   }
 }
 
-@available(*, deprecated, renamed: "BeepVerifier")
+@available(*, deprecated, renamed: "BeeplineVerifier")
 public struct SweeplineVerifier: Sendable {
   public init() {}
 }
@@ -184,23 +184,23 @@ extension SweeplineVerifier {
     signedMessage: SweeplineSignedMessage
   ) throws(SweeplineVerificationError) -> SweeplineVerificationResult {
     do {
-      let result = try BeepVerifier().verificationResult(
+      let result = try BeeplineVerifier().verificationResult(
         body: body,
-        signedMessage: signedMessage.beepSignedMessage
+        signedMessage: signedMessage.beeplineSignedMessage
       )
       return SweeplineVerificationResult(result)
     } catch {
-      throw SweeplineVerificationError(error as! BeepVerificationError)
+      throw SweeplineVerificationError(error as! BeeplineVerificationError)
     }
   }
 }
 
-@available(*, deprecated, renamed: "BeepVerificationResult")
+@available(*, deprecated, renamed: "BeeplineVerificationResult")
 public enum SweeplineVerificationResult: Hashable, Sendable {
   case valid
   case invalidSignature
 
-  init(_ result: BeepVerificationResult) {
+  init(_ result: BeeplineVerificationResult) {
     switch result {
     case .valid:
       self = .valid
@@ -210,7 +210,7 @@ public enum SweeplineVerificationResult: Hashable, Sendable {
   }
 }
 
-@available(*, deprecated, renamed: "BeepVerificationError")
+@available(*, deprecated, renamed: "BeeplineVerificationError")
 public enum SweeplineVerificationError: Error, Hashable, Sendable {
   case unsupportedSignatureAlgorithm(String)
   case invalidPublicKeyBase64
@@ -218,7 +218,7 @@ public enum SweeplineVerificationError: Error, Hashable, Sendable {
   case invalidPublicKey
   case keyIDMismatch(expected: SweeplineKeyID, actual: SweeplineKeyID)
 
-  init(_ error: BeepVerificationError) {
+  init(_ error: BeeplineVerificationError) {
     switch error {
     case .unsupportedSignatureAlgorithm(let algorithm):
       self = .unsupportedSignatureAlgorithm(algorithm)

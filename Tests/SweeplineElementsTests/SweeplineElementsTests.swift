@@ -3,27 +3,27 @@ import Foundation
 import Testing
 
 @testable import Beeper
-@testable import BeepSigning
+@testable import BeeplineSigning
 @testable import SweetfeetElements
 @testable import SweeplineElements
 @testable import SweeplineSigning
 
-@Test func beepSignedMessageUsesBeeperHeaders() throws {
-  let keyID = try #require(BeepKeyID(rawValue: "abcdef0123456789"))
-  let signedMessage = BeepSignedMessage(
+@Test func BeeplineSignedMessageUsesBeeplineHeaders() throws {
+  let keyID = try #require(BeeplineKeyID(rawValue: "abcdef0123456789"))
+  let signedMessage = BeeplineSignedMessage(
     keyID: keyID,
     publicKeyBase64: "public-key",
     signatureBase64: "signature"
   )
 
-  #expect(signedMessage.headers[BeepHeader.signatureAlgorithm.rawValue] == "ed25519")
-  #expect(signedMessage.headers[BeepHeader.keyID.rawValue] == "abcdef0123456789")
-  #expect(signedMessage.headers[BeepHeader.publicKey.rawValue] == "public-key")
-  #expect(signedMessage.headers[BeepHeader.signature.rawValue] == "signature")
+  #expect(signedMessage.headers[BeeplineHeader.signatureAlgorithm.rawValue] == "ed25519")
+  #expect(signedMessage.headers[BeeplineHeader.keyID.rawValue] == "abcdef0123456789")
+  #expect(signedMessage.headers[BeeplineHeader.publicKey.rawValue] == "public-key")
+  #expect(signedMessage.headers[BeeplineHeader.signature.rawValue] == "signature")
 }
 
-@Test func beepSignedMessageAcceptsLegacySweeplineHeaders() throws {
-  let signedMessage = try BeepSignedMessage(headers: [
+@Test func BeeplineSignedMessageAcceptsLegacySweeplineHeaders() throws {
+  let signedMessage = try BeeplineSignedMessage(headers: [
     "x-sweepline-signature-algorithm": "ed25519",
     "X-SWEEPLINE-KEY-ID": "abcdef0123456789",
     "X-Sweepline-Public-Key": "public-key",
@@ -36,31 +36,31 @@ import Testing
   #expect(signedMessage.signatureBase64 == "signature")
 }
 
-@Test func beepSignedMessageRejectsDuplicateAcrossHeaderFamilies() {
-  #expect(throws: BeepSignedMessageHeaderError.duplicateHeader("x-beeper-key-id")) {
-    try BeepSignedMessage(headers: [
-      BeepHeader.signatureAlgorithm.rawValue: "ed25519",
-      BeepHeader.keyID.rawValue: "abcdef0123456789",
+@Test func BeeplineSignedMessageRejectsDuplicateAcrossHeaderFamilies() {
+  #expect(throws: BeeplineSignedMessageHeaderError.duplicateHeader("x-beepline-key-id")) {
+    try BeeplineSignedMessage(headers: [
+      BeeplineHeader.signatureAlgorithm.rawValue: "ed25519",
+      BeeplineHeader.keyID.rawValue: "abcdef0123456789",
       SweeplineHeader.keyID.rawValue: "0000000000000000",
-      BeepHeader.publicKey.rawValue: "public-key",
-      BeepHeader.signature.rawValue: "signature",
+      BeeplineHeader.publicKey.rawValue: "public-key",
+      BeeplineHeader.signature.rawValue: "signature",
     ])
   }
 }
 
-@Test func canonicalRequestUsesBeeperHeaders() throws {
+@Test func canonicalRequestUsesBeeplineHeaders() throws {
   let privateKey = Curve25519.Signing.PrivateKey()
   let body = Data("beep".utf8)
   let signature = try privateKey.signature(for: body)
 
-  let canonicalRequest = BeepSigner.canonicalRequest(
+  let canonicalRequest = BeeplineSigner.canonicalRequest(
     body: body,
     publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
     signature: signature
   )
 
   #expect(canonicalRequest.body == body)
-  #expect(canonicalRequest.headers[BeepHeader.signature.rawValue] == signature.base64EncodedString())
+  #expect(canonicalRequest.headers[BeeplineHeader.signature.rawValue] == signature.base64EncodedString())
 }
 
 @Test func beeperMessageEncodesExpectedKeys() throws {

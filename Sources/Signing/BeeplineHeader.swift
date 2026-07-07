@@ -1,8 +1,8 @@
-public enum BeepHeader: String, CaseIterable, Sendable {
-  case signatureAlgorithm = "X-Beeper-Signature-Algorithm"
-  case keyID = "X-Beeper-Key-ID"
-  case publicKey = "X-Beeper-Public-Key"
-  case signature = "X-Beeper-Signature"
+public enum BeeplineHeader: String, CaseIterable, Sendable {
+  case signatureAlgorithm = "X-Beepline-Signature-Algorithm"
+  case keyID = "X-Beepline-Key-ID"
+  case publicKey = "X-Beepline-Public-Key"
+  case signature = "X-Beepline-Signature"
 
   public var legacyRawValue: String {
     switch self {

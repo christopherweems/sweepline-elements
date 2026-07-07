@@ -1,4 +1,4 @@
-@_exported public import BeepSigning
+@_exported public import BeeplineSigning
 public import struct Foundation::Date
 public import struct Foundation::TimeInterval
 
