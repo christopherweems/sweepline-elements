@@ -95,6 +95,7 @@ let headers = canonicalRequest.headers
 - `message`
 - `message-id`
 - `date`
+- `is-time-sensitive`
 
 ```swift
 import Beeper
@@ -104,7 +105,8 @@ let message = BeeperMessage(
   topic: "arrival",
   message: "Package waiting",
   messageID: "beep-001",
-  date: Date()
+  date: Date(),
+  timeSensitive: true
 )
 ```
 

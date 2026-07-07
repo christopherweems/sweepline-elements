@@ -69,7 +69,8 @@ import Testing
     topic: "arrival",
     message: "Package waiting",
     messageID: "beep-001",
-    date: Date(timeIntervalSince1970: 0)
+    date: Date(timeIntervalSince1970: 0),
+    timeSensitive: true
   )
   let encoder = JSONEncoder()
   encoder.dateEncodingStrategy = .iso8601
@@ -81,6 +82,7 @@ import Testing
   #expect(object["message"] as? String == "Package waiting")
   #expect(object["message-id"] as? String == "beep-001")
   #expect(object["date"] as? String == "1970-01-01T00:00:00Z")
+  #expect(object["is-time-sensitive"] as? Bool == true)
 }
 
 @Test func verifiesValidSignature() throws {
