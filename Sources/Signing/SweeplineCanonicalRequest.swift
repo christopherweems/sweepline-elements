@@ -1,11 +1,11 @@
 public import protocol Foundation::ContiguousBytes
 public import struct Foundation::Data
 
-public struct BeeplineCanonicalRequest: Hashable, Sendable {
+public struct SweeplineCanonicalRequest: Hashable, Sendable {
   public let body: Data
-  public let signedMessage: BeeplineSignedMessage
+  public let signedMessage: SweeplineSignedMessage
 
-  public init(body: Data, signedMessage: BeeplineSignedMessage) {
+  public init(body: Data, signedMessage: SweeplineSignedMessage) {
     self.body = body
     self.signedMessage = signedMessage
   }
@@ -15,13 +15,13 @@ public struct BeeplineCanonicalRequest: Hashable, Sendable {
   }
 }
 
-extension BeeplineSigner {
+extension SweeplineSigner {
   public static func canonicalRequest(
     body: Data,
     publicKeyRawRepresentation: some ContiguousBytes,
     signature: some ContiguousBytes
-  ) -> BeeplineCanonicalRequest {
-    BeeplineCanonicalRequest(
+  ) -> SweeplineCanonicalRequest {
+    SweeplineCanonicalRequest(
       body: body,
       signedMessage: signedMessage(
         publicKeyRawRepresentation: publicKeyRawRepresentation,

@@ -1,17 +1,17 @@
 public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 
-public struct BeeplineSignedMessage: Hashable, Sendable {
+public struct SweeplineSignedMessage: Hashable, Sendable {
   public static let algorithm = "ed25519"
 
   public let signatureAlgorithm: String
-  public let keyID: BeeplineKeyID
+  public let keyID: SweeplineKeyID
   public let publicKeyBase64: String
   public let signatureBase64: String
 
   public init(
     signatureAlgorithm: String = Self.algorithm,
-    keyID: BeeplineKeyID,
+    keyID: SweeplineKeyID,
     publicKeyBase64: String,
     signatureBase64: String,
   ) {
@@ -26,7 +26,7 @@ public struct BeeplineSignedMessage: Hashable, Sendable {
     signature: some ContiguousBytes,
   ) {
     self.init(
-      keyID: BeeplineKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
+      keyID: SweeplineKeyID(publicKeyRawRepresentation: publicKeyRawRepresentation),
       publicKeyBase64: Self.base64EncodedString(publicKeyRawRepresentation),
       signatureBase64: Self.base64EncodedString(signature),
     )
@@ -35,9 +35,7 @@ public struct BeeplineSignedMessage: Hashable, Sendable {
   public init(headers: [String: String]) throws {
     var normalizedHeaders: [String: String] = [:]
     let acceptedHeaders = Dictionary(
-      uniqueKeysWithValues: BeeplineHeader.allCases.flatMap { header in
-        header.acceptedRawValues.map { ($0.lowercased(), header) }
-      }
+      uniqueKeysWithValues: SweeplineHeader.allCases.map { ($0.rawValue.lowercased(), $0) }
     )
 
     for (key, value) in headers {
@@ -50,7 +48,7 @@ public struct BeeplineSignedMessage: Hashable, Sendable {
       let canonicalKey = header.rawValue.lowercased()
 
       guard normalizedHeaders[canonicalKey] == nil else {
-        throw BeeplineSignedMessageHeaderError.duplicateHeader(canonicalKey)
+        throw SweeplineSignedMessageHeaderError.duplicateHeader(canonicalKey)
       }
 
       normalizedHeaders[canonicalKey] = value
@@ -58,8 +56,8 @@ public struct BeeplineSignedMessage: Hashable, Sendable {
 
     let signatureAlgorithm = try Self.headerValue(for: .signatureAlgorithm, in: normalizedHeaders)
     let keyIDRawValue = try Self.headerValue(for: .keyID, in: normalizedHeaders)
-    guard let keyID = BeeplineKeyID(rawValue: keyIDRawValue) else {
-      throw BeeplineSignedMessageHeaderError.invalidKeyID(keyIDRawValue)
+    guard let keyID = SweeplineKeyID(rawValue: keyIDRawValue) else {
+      throw SweeplineSignedMessageHeaderError.invalidKeyID(keyIDRawValue)
     }
 
     self.init(
@@ -72,19 +70,19 @@ public struct BeeplineSignedMessage: Hashable, Sendable {
 
   public var headers: [String: String] {
     [
-      BeeplineHeader.signatureAlgorithm.rawValue: signatureAlgorithm,
-      BeeplineHeader.keyID.rawValue: keyID.rawValue,
-      BeeplineHeader.publicKey.rawValue: publicKeyBase64,
-      BeeplineHeader.signature.rawValue: signatureBase64,
+      SweeplineHeader.signatureAlgorithm.rawValue: signatureAlgorithm,
+      SweeplineHeader.keyID.rawValue: keyID.rawValue,
+      SweeplineHeader.publicKey.rawValue: publicKeyBase64,
+      SweeplineHeader.signature.rawValue: signatureBase64,
     ]
   }
 
   private static func headerValue(
-    for header: BeeplineHeader,
+    for header: SweeplineHeader,
     in normalizedHeaders: [String: String]
   ) throws -> String {
     guard let value = normalizedHeaders[header.rawValue.lowercased()] else {
-      throw BeeplineSignedMessageHeaderError.missingHeader(header)
+      throw SweeplineSignedMessageHeaderError.missingHeader(header)
     }
 
     return value
@@ -97,11 +95,11 @@ public struct BeeplineSignedMessage: Hashable, Sendable {
   }
 }
 
-public enum BeeplineSignedMessageHeaderError: Error, Hashable, Sendable {
-  case missingHeader(BeeplineHeader)
+public enum SweeplineSignedMessageHeaderError: Error, Hashable, Sendable {
+  case missingHeader(SweeplineHeader)
   case duplicateHeader(String)
   case invalidKeyID(String)
 }
 
-public typealias BeepSignedMessage = BeeplineSignedMessage
-public typealias BeepSignedMessageHeaderError = BeeplineSignedMessageHeaderError
+public typealias BeepSignedMessage = SweeplineSignedMessage
+public typealias BeepSignedMessageHeaderError = SweeplineSignedMessageHeaderError

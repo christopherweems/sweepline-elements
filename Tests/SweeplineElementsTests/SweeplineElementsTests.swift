@@ -3,27 +3,26 @@ import Foundation
 import Testing
 
 @testable import Beeper
-@testable import BeeplineSigning
 @testable import SweetfeetElements
 @testable import SweeplineElements
 @testable import SweeplineSigning
 
-@Test func BeeplineSignedMessageUsesBeeplineHeaders() throws {
-  let keyID = try #require(BeeplineKeyID(rawValue: "abcdef0123456789"))
-  let signedMessage = BeeplineSignedMessage(
+@Test func signedMessageUsesSweeplineHeaders() throws {
+  let keyID = try #require(SweeplineKeyID(rawValue: "abcdef0123456789"))
+  let signedMessage = SweeplineSignedMessage(
     keyID: keyID,
     publicKeyBase64: "public-key",
     signatureBase64: "signature"
   )
 
-  #expect(signedMessage.headers[BeeplineHeader.signatureAlgorithm.rawValue] == "ed25519")
-  #expect(signedMessage.headers[BeeplineHeader.keyID.rawValue] == "abcdef0123456789")
-  #expect(signedMessage.headers[BeeplineHeader.publicKey.rawValue] == "public-key")
-  #expect(signedMessage.headers[BeeplineHeader.signature.rawValue] == "signature")
+  #expect(signedMessage.headers[SweeplineHeader.signatureAlgorithm.rawValue] == "ed25519")
+  #expect(signedMessage.headers[SweeplineHeader.keyID.rawValue] == "abcdef0123456789")
+  #expect(signedMessage.headers[SweeplineHeader.publicKey.rawValue] == "public-key")
+  #expect(signedMessage.headers[SweeplineHeader.signature.rawValue] == "signature")
 }
 
-@Test func BeeplineSignedMessageAcceptsLegacySweeplineHeaders() throws {
-  let signedMessage = try BeeplineSignedMessage(headers: [
+@Test func signedMessageAcceptsSweeplineHeadersCaseInsensitively() throws {
+  let signedMessage = try SweeplineSignedMessage(headers: [
     "x-sweepline-signature-algorithm": "ed25519",
     "X-SWEEPLINE-KEY-ID": "abcdef0123456789",
     "X-Sweepline-Public-Key": "public-key",
@@ -36,31 +35,31 @@ import Testing
   #expect(signedMessage.signatureBase64 == "signature")
 }
 
-@Test func BeeplineSignedMessageRejectsDuplicateAcrossHeaderFamilies() {
-  #expect(throws: BeeplineSignedMessageHeaderError.duplicateHeader("x-beepline-key-id")) {
-    try BeeplineSignedMessage(headers: [
-      BeeplineHeader.signatureAlgorithm.rawValue: "ed25519",
-      BeeplineHeader.keyID.rawValue: "abcdef0123456789",
-      SweeplineHeader.keyID.rawValue: "0000000000000000",
-      BeeplineHeader.publicKey.rawValue: "public-key",
-      BeeplineHeader.signature.rawValue: "signature",
+@Test func signedMessageRejectsDuplicateNormalizedSweeplineHeader() {
+  #expect(throws: SweeplineSignedMessageHeaderError.duplicateHeader("x-sweepline-key-id")) {
+    try SweeplineSignedMessage(headers: [
+      SweeplineHeader.signatureAlgorithm.rawValue: "ed25519",
+      SweeplineHeader.keyID.rawValue: "abcdef0123456789",
+      SweeplineHeader.keyID.rawValue.lowercased(): "0000000000000000",
+      SweeplineHeader.publicKey.rawValue: "public-key",
+      SweeplineHeader.signature.rawValue: "signature",
     ])
   }
 }
 
-@Test func canonicalRequestUsesBeeplineHeaders() throws {
+@Test func canonicalRequestUsesSweeplineHeaders() throws {
   let privateKey = Curve25519.Signing.PrivateKey()
   let body = Data("beep".utf8)
   let signature = try privateKey.signature(for: body)
 
-  let canonicalRequest = BeeplineSigner.canonicalRequest(
+  let canonicalRequest = SweeplineSigner.canonicalRequest(
     body: body,
     publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
     signature: signature
   )
 
   #expect(canonicalRequest.body == body)
-  #expect(canonicalRequest.headers[BeeplineHeader.signature.rawValue] == signature.base64EncodedString())
+  #expect(canonicalRequest.headers[SweeplineHeader.signature.rawValue] == signature.base64EncodedString())
 }
 
 @Test func beeperMessageEncodesExpectedKeys() throws {
@@ -215,38 +214,12 @@ import Testing
   #expect(signedMessage.headers[SweeplineHeader.signature.rawValue] == "signature")
 }
 
-@Test func signedMessageParsesHeadersCaseInsensitively() throws {
-  let signedMessage = try SweeplineSignedMessage(headers: [
-    "x-sweepline-signature-algorithm": "ed25519",
-    "X-SWEEPLINE-KEY-ID": "abcdef0123456789",
-    "X-Sweepline-Public-Key": "public-key",
-    "x-Sweepline-signature": "signature",
-  ])
-
-  #expect(signedMessage.signatureAlgorithm == "ed25519")
-  #expect(signedMessage.keyID.rawValue == "abcdef0123456789")
-  #expect(signedMessage.publicKeyBase64 == "public-key")
-  #expect(signedMessage.signatureBase64 == "signature")
-}
-
 @Test func signedMessageRejectsMissingHeader() {
   #expect(throws: SweeplineSignedMessageHeaderError.missingHeader(.signature)) {
     try SweeplineSignedMessage(headers: [
       SweeplineHeader.signatureAlgorithm.rawValue: "ed25519",
       SweeplineHeader.keyID.rawValue: "abcdef0123456789",
       SweeplineHeader.publicKey.rawValue: "public-key",
-    ])
-  }
-}
-
-@Test func signedMessageRejectsDuplicateNormalizedSweeplineHeader() {
-  #expect(throws: SweeplineSignedMessageHeaderError.duplicateHeader("x-sweepline-key-id")) {
-    try SweeplineSignedMessage(headers: [
-      SweeplineHeader.signatureAlgorithm.rawValue: "ed25519",
-      SweeplineHeader.keyID.rawValue: "abcdef0123456789",
-      SweeplineHeader.keyID.rawValue.lowercased(): "0000000000000000",
-      SweeplineHeader.publicKey.rawValue: "public-key",
-      SweeplineHeader.signature.rawValue: "signature",
     ])
   }
 }

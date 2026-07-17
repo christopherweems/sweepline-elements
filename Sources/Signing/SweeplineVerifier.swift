@@ -1,20 +1,20 @@
 public import struct Foundation::Data
 private import Crypto
 
-public struct BeeplineVerifier: Sendable {
+public struct SweeplineVerifier: Sendable {
   public init() {}
 }
 
-extension BeeplineVerifier {
-  public func verify(body: Data, signedMessage: BeeplineSignedMessage) throws -> Bool {
+extension SweeplineVerifier {
+  public func verify(body: Data, signedMessage: SweeplineSignedMessage) throws -> Bool {
     try verificationResult(body: body, signedMessage: signedMessage) == .valid
   }
 
   public func verificationResult(
     body: Data,
-    signedMessage: BeeplineSignedMessage
-  ) throws(BeeplineVerificationError) -> BeeplineVerificationResult {
-    guard signedMessage.signatureAlgorithm.lowercased() == BeeplineSignedMessage.algorithm else {
+    signedMessage: SweeplineSignedMessage
+  ) throws(SweeplineVerificationError) -> SweeplineVerificationResult {
+    guard signedMessage.signatureAlgorithm.lowercased() == SweeplineSignedMessage.algorithm else {
       throw .unsupportedSignatureAlgorithm(signedMessage.signatureAlgorithm)
     }
 
@@ -25,7 +25,7 @@ extension BeeplineVerifier {
       throw .invalidSignatureBase64
     }
 
-    let computedKeyID = BeeplineKeyID(publicKeyRawRepresentation: publicKeyData)
+    let computedKeyID = SweeplineKeyID(publicKeyRawRepresentation: publicKeyData)
     guard computedKeyID == signedMessage.keyID else {
       throw .keyIDMismatch(expected: computedKeyID, actual: signedMessage.keyID)
     }
@@ -39,15 +39,15 @@ extension BeeplineVerifier {
   }
 }
 
-public enum BeeplineVerificationResult: Hashable, Sendable {
+public enum SweeplineVerificationResult: Hashable, Sendable {
   case valid
   case invalidSignature
 }
 
-public enum BeeplineVerificationError: Error, Hashable, Sendable {
+public enum SweeplineVerificationError: Error, Hashable, Sendable {
   case unsupportedSignatureAlgorithm(String)
   case invalidPublicKeyBase64
   case invalidSignatureBase64
   case invalidPublicKey
-  case keyIDMismatch(expected: BeeplineKeyID, actual: BeeplineKeyID)
+  case keyIDMismatch(expected: SweeplineKeyID, actual: SweeplineKeyID)
 }

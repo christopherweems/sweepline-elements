@@ -1,4 +1,4 @@
-@_exported public import BeeplineSigning
+@_exported public import SweeplineSigning
 public import struct Foundation::Date
 
 public struct BeeperMessage: Codable, Hashable, Sendable {

@@ -1,4 +1,4 @@
-import BeeplineSigning
+import SweeplineSigning
 
 public struct SweeplineResponse: Hashable, Sendable {
   public let version: SweeplineVersion
