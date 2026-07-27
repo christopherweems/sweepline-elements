@@ -2,7 +2,7 @@ import Crypto
 import Foundation
 import Testing
 
-@testable import Beeper
+@testable import BeeperProtocol
 @testable import SweetfeetElements
 @testable import SweeplineElements
 @testable import SweeplineSigning

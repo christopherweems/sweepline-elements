@@ -28,8 +28,8 @@ let package = Package(
       targets: ["Sweetfeet"]
     ),
     .library(
-      name: "Beeper",
-      targets: ["Beeper"]
+      name: "BeeperProtocol",
+      targets: ["BeeperProtocol"]
     ),
     
     // Compatibility
@@ -71,7 +71,7 @@ let package = Package(
       path: "Sources/Protocol/Sweetfeet",
     ),
     .target(
-      name: "Beeper",
+      name: "BeeperProtocol",
       dependencies: [
         "SweeplineSigning"
       ],
@@ -98,7 +98,7 @@ let package = Package(
       dependencies: [
         "Sweepline",
         "Sweetfeet",
-        "Beeper",
+        "BeeperProtocol",
         "SweeplineElements",
         "SweetfeetElements",
         "SweeplineSigning",

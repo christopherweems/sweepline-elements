@@ -4,10 +4,10 @@
 
 Primary modules:
 
-- `SweeplineSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction across `Sweepline`, `Sweetfeet`, and `Beeper`.
+- `SweeplineSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction across `Sweepline`, `Sweetfeet`, and `BeeperProtocol`.
 - `Sweepline` for gesture and interaction payloads.
 - `Sweetfeet` for commerce and event payloads.
-- `Beeper` for minimal signed messages.
+- `BeeperProtocol` for minimal signed messages.
 
 Every protocol in the family is payload-agnostic at the signing layer: the signature covers the raw HTTP request body bytes, and protocol meaning lives entirely in the JSON body.
 
@@ -23,7 +23,7 @@ Products:
 .product(name: "SweeplineSigning", package: "sweepline-elements")
 .product(name: "Sweepline", package: "sweepline-elements")
 .product(name: "Sweetfeet", package: "sweepline-elements")
-.product(name: "Beeper", package: "sweepline-elements")
+.product(name: "BeeperProtocol", package: "sweepline-elements")
 ```
 
 Compatibility umbrella products remain available:
@@ -83,9 +83,9 @@ let headers = canonicalRequest.headers
 - `SweetfeetItemPriceCheckResponse`
 - `SweetfeetEventType`
 
-## Beeper
+## BeeperProtocol
 
-`Beeper` models a minimal signed messaging payload with:
+`BeeperProtocol` models a minimal signed messaging payload with:
 
 - `title`
 - `topic`
@@ -95,7 +95,7 @@ let headers = canonicalRequest.headers
 - `is-time-sensitive`
 
 ```swift
-import Beeper
+import BeeperProtocol
 
 let message = BeeperMessage(
   title: "Front desk",
@@ -109,6 +109,6 @@ let message = BeeperMessage(
 
 ## Compatibility
 
-- Prefer `SweeplineSigning`, `Sweepline`, `Sweetfeet`, and `Beeper`.
+- Prefer `SweeplineSigning`, `Sweepline`, `Sweetfeet`, and `BeeperProtocol`.
 - `SweeplineElements` and `SweetfeetElements` remain available as umbrella products.
 - `Cashline*` aliases have been removed.
