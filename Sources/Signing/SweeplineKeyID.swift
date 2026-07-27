@@ -2,7 +2,7 @@ public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 private import Crypto
 
-public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
+public struct SweeplineKeyID: RawRepresentable, Codable, Hashable, Sendable {
   public let rawValue: String
 
   public init?(rawValue: String) {
@@ -30,5 +30,22 @@ public struct SweeplineKeyID: RawRepresentable, Hashable, Sendable {
     return rawValue.utf8.allSatisfy { byte in
       (48...57).contains(byte) || (97...102).contains(byte)
     }
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    let rawValue = try container.decode(String.self)
+    guard let value = Self(rawValue: rawValue) else {
+      throw DecodingError.dataCorruptedError(
+        in: container,
+        debugDescription: "Expected a 16-character lowercase hexadecimal Sweepline key ID."
+      )
+    }
+    self = value
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(rawValue)
   }
 }
