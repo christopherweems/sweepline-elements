@@ -1,7 +1,7 @@
 public import protocol Foundation::ContiguousBytes
 /* private */ import struct Foundation::Data
 
-public struct SweeplineSignedMessage: Hashable, Sendable {
+public struct SweeplineSignedMessage: Codable, Hashable, Sendable {
   public static let algorithm = "ed25519"
 
   public let signatureAlgorithm: String
@@ -75,6 +75,13 @@ public struct SweeplineSignedMessage: Hashable, Sendable {
       SweeplineHeader.publicKey.rawValue: publicKeyBase64,
       SweeplineHeader.signature.rawValue: signatureBase64,
     ]
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case signatureAlgorithm = "algorithm"
+    case keyID = "key-id"
+    case publicKeyBase64 = "public-key"
+    case signatureBase64 = "value"
   }
 
   private static func headerValue(

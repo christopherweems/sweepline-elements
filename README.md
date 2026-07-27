@@ -94,6 +94,11 @@ let headers = canonicalRequest.headers
 - `date`
 - `is-time-sensitive`
 
+It also provides `BeeperEnvelope`, `BeeperDeliveryMetadata`, and
+`SweeplineSignedArtifact` for transporting the exact signed request bytes through
+delivery systems such as APNS. Presentation metadata can be projected beside the
+envelope without altering the signed artifact.
+
 ```swift
 import BeeperProtocol
 

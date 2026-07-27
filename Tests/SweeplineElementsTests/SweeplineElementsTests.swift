@@ -84,6 +84,29 @@ import Testing
   #expect(object["is-time-sensitive"] as? Bool == true)
 }
 
+@Test func beeperEnvelopeRoundTripsExactSignedBody() throws {
+  let privateKey = Curve25519.Signing.PrivateKey()
+  let body = Data(#"{"notification":{"future-field":true}}"#.utf8)
+  let signature = try privateKey.signature(for: body)
+  let signedMessage = SweeplineSignedMessage(
+    publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
+    signature: signature
+  )
+  let envelope = BeeperEnvelope(
+    artifact: SweeplineSignedArtifact(body: body, signedMessage: signedMessage),
+    delivery: BeeperDeliveryMetadata(
+      messageID: "delivery-001",
+      receivedAt: Date(timeIntervalSince1970: 0)
+    )
+  )
+
+  let encoded = try JSONEncoder().encode(envelope)
+  let decoded = try JSONDecoder().decode(BeeperEnvelope.self, from: encoded)
+
+  #expect(decoded.artifact.body == body)
+  #expect(try SweeplineVerifier().verify(body: body, signedMessage: decoded.artifact.signedMessage))
+}
+
 @Test func verifiesValidSignature() throws {
   let privateKey = Curve25519.Signing.PrivateKey()
   let publicKeyData = privateKey.publicKey.rawRepresentation
