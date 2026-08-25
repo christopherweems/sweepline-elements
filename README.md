@@ -8,6 +8,7 @@ Primary modules:
 - `Sweepline` for gesture and interaction payloads.
 - `SweetfeetProtocol` for commerce and event payloads.
 - `BeeperProtocol` for minimal signed messages.
+- `SweeplinePhoto` for signed, pull-based image delivery metadata.
 
 Every protocol in the family is payload-agnostic at the signing layer: the signature covers the raw HTTP request body bytes, and protocol meaning lives entirely in the JSON body.
 
@@ -24,6 +25,7 @@ Products:
 .product(name: "Sweepline", package: "sweepline-elements")
 .product(name: "SweetfeetProtocol", package: "sweepline-elements")
 .product(name: "BeeperProtocol", package: "sweepline-elements")
+.product(name: "SweeplinePhoto", package: "sweepline-elements")
 ```
 
 Compatibility umbrella products remain available:
@@ -112,8 +114,26 @@ let message = BeeperMessage(
 )
 ```
 
+## SweeplinePhoto
+
+`SweeplinePhoto` tells a server where to download an image instead of placing
+the image bytes in the signed request. Its JSON payload contains `image-hash`,
+`download-url`, and `good-until`; the latter is an integer Unix timestamp in
+seconds. The raw JSON body is signed using the standard `X-Sweepline-*` headers.
+
+```swift
+import SweeplinePhoto
+
+let photo = SweeplinePhoto(
+  imageHash: "sha256:<digest>",
+  downloadURL: URL(string: "https://example.com/image.jpg")!,
+  goodUntil: 1_800_000_000
+)
+```
+
 ## Compatibility
 
-- Prefer `SweeplineSigning`, `Sweepline`, `SweetfeetProtocol`, and `BeeperProtocol`.
+- Prefer `SweeplineSigning`, `Sweepline`, `SweetfeetProtocol`, `BeeperProtocol`,
+  and `SweeplinePhoto`.
 - `SweeplineElements` and `SweetfeetElements` remain available as umbrella products.
 - `Cashline*` aliases have been removed.

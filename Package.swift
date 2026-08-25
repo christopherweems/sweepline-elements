@@ -31,6 +31,10 @@ let package = Package(
       name: "BeeperProtocol",
       targets: ["BeeperProtocol"]
     ),
+    .library(
+      name: "SweeplinePhoto",
+      targets: ["SweeplinePhoto"]
+    ),
     
     // Compatibility
     
@@ -78,6 +82,13 @@ let package = Package(
       path: "Sources/Protocol/Beeper",
     ),
     .target(
+      name: "SweeplinePhoto",
+      dependencies: [
+        "SweeplineSigning"
+      ],
+      path: "Sources/Protocol/SweeplinePhoto",
+    ),
+    .target(
       name: "SweeplineElements",
       dependencies: [
         "Sweepline",
@@ -99,6 +110,7 @@ let package = Package(
         "Sweepline",
         "SweetfeetProtocol",
         "BeeperProtocol",
+        "SweeplinePhoto",
         "SweeplineElements",
         "SweetfeetElements",
         "SweeplineSigning",

@@ -3,9 +3,38 @@ import Foundation
 import Testing
 
 @testable import BeeperProtocol
+@testable import SweeplinePhoto
 @testable import SweetfeetElements
 @testable import SweeplineElements
 @testable import SweeplineSigning
+
+@Test func sweeplinePhotoEncodesDownloadMetadata() throws {
+  let photo = SweeplinePhoto(
+    imageHash: "sha256:0123456789abcdef",
+    downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
+    goodUntil: 1_800_000_000
+  )
+
+  let data = try JSONEncoder().encode(photo)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["image-hash"] as? String == "sha256:0123456789abcdef")
+  #expect(object["download-url"] as? String == "https://uploads.example/photo.jpg")
+  #expect(object["good-until"] as? Int64 == 1_800_000_000)
+  #expect(object.count == 3)
+}
+
+@Test func sweeplinePhotoRoundTripsUnixExpiry() throws {
+  let data = Data(
+    #"{"image-hash":"abc123","download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
+  )
+
+  let photo = try JSONDecoder().decode(SweeplinePhoto.self, from: data)
+
+  #expect(photo.imageHash == "abc123")
+  #expect(photo.downloadURL.absoluteString == "https://uploads.example/image")
+  #expect(photo.goodUntil == 1_800_000_000)
+}
 
 @Test func signedMessageUsesSweeplineHeaders() throws {
   let keyID = try #require(SweeplineKeyID(rawValue: "abcdef0123456789"))
