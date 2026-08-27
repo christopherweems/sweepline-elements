@@ -124,12 +124,16 @@ seconds. The raw JSON body is signed using the standard `X-Sweepline-*` headers.
 ```swift
 import SweeplinePhoto
 
-let photo = SweeplinePhoto(
-  imageHash: "sha256:<digest>",
+let photo = try SweeplinePhoto(
+  imageHash: "sha256:<64 lowercase hexadecimal digits>",
   downloadURL: URL(string: "https://example.com/image.jpg")!,
   goodUntil: 1_800_000_000
 )
 ```
+
+`image-hash` is canonical and validated when constructing or decoding a
+`SweeplinePhoto`: it must be `sha256:` followed by exactly 64 lowercase
+hexadecimal digits.
 
 ## Compatibility
 

@@ -8,6 +8,8 @@ public import struct Foundation.URL
 /// `downloadURL`, and `goodUntil` is the Unix timestamp, in seconds, through
 /// which the URL should be considered usable.
 public struct SweeplinePhoto: Codable, Hashable, Sendable {
+  public static let imageHashPrefix = "sha256:"
+
   /// SHA-256 digest of the image bytes, encoded as lowercase hexadecimal.
   public let imageHash: String
   
@@ -18,7 +20,11 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     imageHash: String,
     downloadURL: URL,
     goodUntil: Int64
-  ) {
+  ) throws {
+    guard Self.isValidImageHash(imageHash) else {
+      throw SweeplinePhotoError.invalidImageHash(imageHash)
+    }
+
     self.imageHash = imageHash
     self.downloadURL = downloadURL
     self.goodUntil = goodUntil
@@ -29,6 +35,38 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     case downloadURL = "download-url"
     case goodUntil = "good-until"
   }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let imageHash = try container.decode(String.self, forKey: .imageHash)
+
+    guard Self.isValidImageHash(imageHash) else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .imageHash,
+        in: container,
+        debugDescription: "image-hash must be sha256: followed by exactly 64 lowercase hexadecimal digits."
+      )
+    }
+
+    self.imageHash = imageHash
+    self.downloadURL = try container.decode(URL.self, forKey: .downloadURL)
+    self.goodUntil = try container.decode(Int64.self, forKey: .goodUntil)
+  }
+
+  private static func isValidImageHash(_ imageHash: String) -> Bool {
+    guard imageHash.hasPrefix(imageHashPrefix) else {
+      return false
+    }
+
+    let digest = imageHash.dropFirst(imageHashPrefix.count)
+    return digest.count == 64 && digest.allSatisfy { character in
+      "0123456789abcdef".contains(character)
+    }
+  }
+}
+
+public enum SweeplinePhotoError: Error, Hashable, Sendable {
+  case invalidImageHash(String)
 }
 
 public typealias SweeplinePhotoRequest = SweeplinePhoto
