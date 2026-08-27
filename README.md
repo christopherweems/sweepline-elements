@@ -135,6 +135,12 @@ let photo = try SweeplinePhoto(
 `SweeplinePhoto`: it must be `sha256:` followed by exactly 64 lowercase
 hexadecimal digits.
 
+Before downloading the announced image, a receiving service must make an
+`OPTIONS` request to its SweeplinePhoto endpoint. It may download the image
+only when the response is `204 No Content` and includes `Sweepline-Photo: 1`.
+`SweeplinePhotoEndpoint.optionsRequest(for:)` constructs the check, and
+`SweeplinePhotoEndpoint.permitsDownload(_:)` validates its response.
+
 ## Compatibility
 
 - Prefer `SweeplineSigning`, `Sweepline`, `SweetfeetProtocol`, `BeeperProtocol`,

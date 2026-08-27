@@ -8,6 +8,37 @@ import Testing
 @testable import SweeplineElements
 @testable import SweeplineSigning
 
+@Test func sweeplinePhotoEndpointRequiresExplicitOptionsOptIn() throws {
+  let endpointURL = try #require(URL(string: "https://service.example/photos"))
+  let request = SweeplinePhotoEndpoint.optionsRequest(for: endpointURL)
+
+  #expect(request.url == endpointURL)
+  #expect(request.httpMethod == "OPTIONS")
+
+  let permitted = try #require(HTTPURLResponse(
+    url: endpointURL,
+    statusCode: 204,
+    httpVersion: nil,
+    headerFields: ["sweepline-photo": "1"]
+  ))
+  #expect(SweeplinePhotoEndpoint.permitsDownload(permitted))
+
+  for (statusCode, headers) in [
+    (200, ["Sweepline-Photo": "1"]),
+    (204, [:]),
+    (204, ["Sweepline-Photo": "0"]),
+    (204, ["Sweepline-Photo": "true"]),
+  ] {
+    let response = try #require(HTTPURLResponse(
+      url: endpointURL,
+      statusCode: statusCode,
+      httpVersion: nil,
+      headerFields: headers
+    ))
+    #expect(!SweeplinePhotoEndpoint.permitsDownload(response))
+  }
+}
+
 @Test func sweeplinePhotoEncodesDownloadMetadata() throws {
   let imageHash = "sha256:" + String(repeating: "0123456789abcdef", count: 4)
   let photo = try SweeplinePhoto(
