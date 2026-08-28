@@ -61,22 +61,32 @@ public enum SweeplinePhotoStorageRequestError: Error, Hashable, Sendable {
 }
 
 
-/// Storage details assigned by an intermediary for a photo.
+/// Storage details assigned by an intermediary for a photo asset.
 ///
-/// Use the returned values with the original storage request's `imageHash` to
-/// construct the `SweeplinePhoto` that is signed and sent to the recipient.
+/// Send the image bytes in a `POST` request to `assetURL` before
+/// `assetUploadGoodUntil`. Once uploaded, that URL serves the asset through
+/// `GET`. Use it with the original storage request's `imageHash`, `byteCount`,
+/// and `goodUntil` to construct the `SweeplinePhoto` signed for the recipient.
  
 public struct SweeplinePhotoStorageResponse: Codable, Hashable, Sendable {
-  public let downloadURL: URL
+  /// Endpoint that accepts the asset through POST and serves it through GET.
+  public let assetURL: URL
+
+  /// Unix timestamp, in seconds, through which the asset can be uploaded.
+  public let assetUploadGoodUntil: Int64
+
+  /// Unix timestamp, in seconds, through which the asset can be downloaded.
   public let goodUntil: Int64
 
-  public init(downloadURL: URL, goodUntil: Int64) {
-    self.downloadURL = downloadURL
+  public init(assetURL: URL, assetUploadGoodUntil: Int64, goodUntil: Int64) {
+    self.assetURL = assetURL
+    self.assetUploadGoodUntil = assetUploadGoodUntil
     self.goodUntil = goodUntil
   }
 
   enum CodingKeys: String, CodingKey {
-    case downloadURL = "download-url"
+    case assetURL = "asset-url"
+    case assetUploadGoodUntil = "asset-upload-good-until"
     case goodUntil = "good-until"
   }
 }

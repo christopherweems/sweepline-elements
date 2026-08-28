@@ -156,9 +156,12 @@ hexadecimal digits.
 
 Use `SweeplinePhotoStorageRequest` when sending image bytes to an
 intermediary. It carries the `image-hash` and `byte-count`; the intermediary assigns the
-`download-url` and `good-until` timestamp in a
-`SweeplinePhotoStorageResponse`. Combine those values with the request's hash
-to create and sign the `SweeplinePhoto` sent to the recipient.
+`asset-url`, `asset-upload-good-until`, and `good-until` timestamps in a
+`SweeplinePhotoStorageResponse`. The client must `POST` the image bytes to the
+asset URL before `asset-upload-good-until`; the same URL serves the hosted asset
+through `GET`. Combine that URL, the request's hash and byte count, and the
+response's `good-until` to create and sign the `SweeplinePhoto` sent to the
+recipient.
 
 The encoded storage request is itself signed as the exact HTTP body using the
 standard `X-Sweepline-*` headers from `SweeplineSigning`:

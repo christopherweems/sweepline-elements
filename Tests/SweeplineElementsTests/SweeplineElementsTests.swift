@@ -132,13 +132,15 @@ import Testing
 
 @Test func sweeplinePhotoStorageResponseBuildsPhoto() throws {
   let response = SweeplinePhotoStorageResponse(
-    downloadURL: try #require(URL(string: "https://uploads.example/stored-image")),
+    assetURL: try #require(URL(string: "https://uploads.example/stored-image")),
+    assetUploadGoodUntil: 1_799_999_000,
     goodUntil: 1_800_000_000
   )
   let data = try JSONEncoder().encode(response)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-  #expect(object["download-url"] as? String == "https://uploads.example/stored-image")
+  #expect(object["asset-url"] as? String == "https://uploads.example/stored-image")
+  #expect(object["asset-upload-good-until"] as? Int64 == 1_799_999_000)
   #expect(object["good-until"] as? Int64 == 1_800_000_000)
 
   let request = try SweeplinePhotoStorageRequest(
@@ -148,10 +150,10 @@ import Testing
   let photo = try SweeplinePhoto(
     imageHash: request.imageHash,
     byteCount: request.byteCount,
-    downloadURL: response.downloadURL,
+    downloadURL: response.assetURL,
     goodUntil: response.goodUntil
   )
-  #expect(photo.downloadURL == response.downloadURL)
+  #expect(photo.downloadURL == response.assetURL)
   #expect(photo.goodUntil == response.goodUntil)
 }
 
