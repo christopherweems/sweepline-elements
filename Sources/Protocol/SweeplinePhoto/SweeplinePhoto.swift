@@ -60,7 +60,7 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     self.goodUntil = try container.decode(Int64.self, forKey: .goodUntil)
   }
 
-  private static func isValidImageHash(_ imageHash: String) -> Bool {
+  static func isValidImageHash(_ imageHash: String) -> Bool {
     guard imageHash.hasPrefix(imageHashPrefix) else {
       return false
     }

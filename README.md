@@ -137,6 +137,14 @@ let photo = try SweeplinePhoto(
 `SweeplinePhoto`: it must be `sha256:` followed by exactly 64 lowercase
 hexadecimal digits.
 
+### Intermediary storage
+
+Use `SweeplinePhotoStorageRequest` when sending image bytes to an
+intermediary. It carries the `image-hash`; the intermediary assigns the
+`download-url` and `good-until` timestamp in a
+`SweeplinePhotoStorageResponse`. Combine those values with the request's hash
+to create and sign the `SweeplinePhoto` sent to the recipient.
+
 Before downloading the announced image, a receiving service must make an
 `OPTIONS` request to its SweeplinePhoto endpoint. It may download the image
 only when the response is `204 No Content` and includes `Sweepline-Photo: 1`.

@@ -88,6 +88,42 @@ import Testing
   #expect(try JSONDecoder().decode(SweeplinePhoto.self, from: data).memo == nil)
 }
 
+@Test func sweeplinePhotoStorageRequestEncodesImageHash() throws {
+  let imageHash = "sha256:" + String(repeating: "0123456789abcdef", count: 4)
+  let request = try SweeplinePhotoStorageRequest(imageHash: imageHash)
+
+  let data = try JSONEncoder().encode(request)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["image-hash"] as? String == imageHash)
+  #expect(object["good-until"] == nil)
+  #expect(object.count == 1)
+  #expect(try JSONDecoder().decode(SweeplinePhotoStorageRequest.self, from: data) == request)
+}
+
+@Test func sweeplinePhotoStorageResponseBuildsPhoto() throws {
+  let response = SweeplinePhotoStorageResponse(
+    downloadURL: try #require(URL(string: "https://uploads.example/stored-image")),
+    goodUntil: 1_800_000_000
+  )
+  let data = try JSONEncoder().encode(response)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(object["download-url"] as? String == "https://uploads.example/stored-image")
+  #expect(object["good-until"] as? Int64 == 1_800_000_000)
+
+  let request = try SweeplinePhotoStorageRequest(
+    imageHash: "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+  )
+  let photo = try SweeplinePhoto(
+    imageHash: request.imageHash,
+    downloadURL: response.downloadURL,
+    goodUntil: response.goodUntil
+  )
+  #expect(photo.downloadURL == response.downloadURL)
+  #expect(photo.goodUntil == response.goodUntil)
+}
+
 @Test func sweeplinePhotoRejectsNoncanonicalImageHashes() throws {
   let downloadURL = try #require(URL(string: "https://uploads.example/image"))
   let uppercaseDigest = "sha256:" + String(repeating: "A", count: 64)
