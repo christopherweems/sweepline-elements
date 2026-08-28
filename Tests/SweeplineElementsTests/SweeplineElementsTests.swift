@@ -124,6 +124,27 @@ import Testing
   #expect(photo.goodUntil == response.goodUntil)
 }
 
+@Test func sweeplinePhotoStorageRequestUsesSweeplineSigningHeaders() throws {
+  let request = try SweeplinePhotoStorageRequest(
+    imageHash: "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+  )
+  let body = try JSONEncoder().encode(request)
+  let privateKey = Curve25519.Signing.PrivateKey()
+  let signature = try privateKey.signature(for: body)
+  let signedRequest = SweeplineSigner.canonicalRequest(
+    body: body,
+    publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
+    signature: signature
+  )
+
+  #expect(signedRequest.body == body)
+  #expect(signedRequest.headers[SweeplineHeader.signature.rawValue] != nil)
+  #expect(try SweeplineVerifier().verify(
+    body: signedRequest.body,
+    signedMessage: signedRequest.signedMessage
+  ))
+}
+
 @Test func sweeplinePhotoRejectsNoncanonicalImageHashes() throws {
   let downloadURL = try #require(URL(string: "https://uploads.example/image"))
   let uppercaseDigest = "sha256:" + String(repeating: "A", count: 64)

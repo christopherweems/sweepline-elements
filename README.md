@@ -145,6 +145,24 @@ intermediary. It carries the `image-hash`; the intermediary assigns the
 `SweeplinePhotoStorageResponse`. Combine those values with the request's hash
 to create and sign the `SweeplinePhoto` sent to the recipient.
 
+The encoded storage request is itself signed as the exact HTTP body using the
+standard `X-Sweepline-*` headers from `SweeplineSigning`:
+
+```swift
+let storageRequest = try SweeplinePhotoStorageRequest(
+  imageHash: "sha256:<64 lowercase hexadecimal digits>"
+)
+let body = try JSONEncoder().encode(storageRequest)
+let signature = try privateKey.signature(for: body)
+let signedRequest = SweeplineSigner.canonicalRequest(
+  body: body,
+  publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
+  signature: signature
+)
+
+// Send `signedRequest.body` and `signedRequest.headers` to the intermediary.
+```
+
 Before downloading the announced image, a receiving service must make an
 `OPTIONS` request to its SweeplinePhoto endpoint. It may download the image
 only when the response is `204 No Content` and includes `Sweepline-Photo: 1`.
