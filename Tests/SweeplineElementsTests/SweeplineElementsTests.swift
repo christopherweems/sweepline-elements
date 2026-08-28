@@ -43,6 +43,7 @@ import Testing
   let imageHash = "sha256:" + String(repeating: "0123456789abcdef", count: 4)
   let photo = try SweeplinePhoto(
     imageHash: imageHash,
+    memo: "Package front photo",
     downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
     goodUntil: 1_800_000_000
   )
@@ -51,22 +52,40 @@ import Testing
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
   #expect(object["image-hash"] as? String == imageHash)
+  #expect(object["memo"] as? String == "Package front photo")
   #expect(object["download-url"] as? String == "https://uploads.example/photo.jpg")
   #expect(object["good-until"] as? Int64 == 1_800_000_000)
-  #expect(object.count == 3)
+  #expect(object.count == 4)
 }
 
 @Test func sweeplinePhotoRoundTripsUnixExpiry() throws {
   let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
   let data = Data(
-    #"{"image-hash":"\#(imageHash)","download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
+    #"{"image-hash":"\#(imageHash)","memo":"Delivery confirmation","download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
   )
 
   let photo = try JSONDecoder().decode(SweeplinePhoto.self, from: data)
 
   #expect(photo.imageHash == imageHash)
+  #expect(photo.memo == "Delivery confirmation")
   #expect(photo.downloadURL.absoluteString == "https://uploads.example/image")
   #expect(photo.goodUntil == 1_800_000_000)
+}
+
+@Test func sweeplinePhotoOmitsOptionalMemo() throws {
+  let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+  let photo = try SweeplinePhoto(
+    imageHash: imageHash,
+    downloadURL: try #require(URL(string: "https://uploads.example/image")),
+    goodUntil: 1_800_000_000
+  )
+
+  let data = try JSONEncoder().encode(photo)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+  #expect(photo.memo == nil)
+  #expect(object["memo"] == nil)
+  #expect(try JSONDecoder().decode(SweeplinePhoto.self, from: data).memo == nil)
 }
 
 @Test func sweeplinePhotoRejectsNoncanonicalImageHashes() throws {
@@ -83,6 +102,7 @@ import Testing
     #expect(throws: SweeplinePhotoError.invalidImageHash(imageHash)) {
       try SweeplinePhoto(
         imageHash: imageHash,
+        memo: "Invalid hash",
         downloadURL: downloadURL,
         goodUntil: 1_800_000_000
       )

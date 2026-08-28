@@ -12,12 +12,16 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
 
   /// SHA-256 digest of the image bytes, encoded as lowercase hexadecimal.
   public let imageHash: String
-  
+
+  /// A human-readable note accompanying the image.
+  public let memo: String?
+
   public let downloadURL: URL
   public let goodUntil: Int64
   
   public init(
     imageHash: String,
+    memo: String? = nil,
     downloadURL: URL,
     goodUntil: Int64
   ) throws {
@@ -26,12 +30,14 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     }
 
     self.imageHash = imageHash
+    self.memo = memo
     self.downloadURL = downloadURL
     self.goodUntil = goodUntil
   }
   
   enum CodingKeys: String, CodingKey {
     case imageHash = "image-hash"
+    case memo
     case downloadURL = "download-url"
     case goodUntil = "good-until"
   }
@@ -49,6 +55,7 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     }
 
     self.imageHash = imageHash
+    self.memo = try container.decodeIfPresent(String.self, forKey: .memo)
     self.downloadURL = try container.decode(URL.self, forKey: .downloadURL)
     self.goodUntil = try container.decode(Int64.self, forKey: .goodUntil)
   }
