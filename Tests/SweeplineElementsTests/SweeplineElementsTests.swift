@@ -45,6 +45,7 @@ import Testing
     imageHash: imageHash,
     memo: "Package front photo",
     byteCount: 42_000,
+    mediaType: "image/jpeg",
     downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
     goodUntil: 1_800_000_000
   )
@@ -55,15 +56,17 @@ import Testing
   #expect(object["image-hash"] as? String == imageHash)
   #expect(object["memo"] as? String == "Package front photo")
   #expect(object["byte-count"] as? Int64 == 42_000)
+  #expect(object["media-type"] as? String == "image/jpeg")
   #expect(object["download-url"] as? String == "https://uploads.example/photo.jpg")
   #expect(object["good-until"] as? Int64 == 1_800_000_000)
-  #expect(object.count == 5)
+  #expect(object.count == 6)
 }
 
 @Test func sweeplinePhotoUsesSweeplineSigningHeaders() throws {
   let photo = try SweeplinePhoto(
     imageHash: "sha256:" + String(repeating: "0123456789abcdef", count: 4),
     byteCount: 42_000,
+    mediaType: "image/jpeg",
     downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
     goodUntil: 1_800_000_000
   )
@@ -87,7 +90,7 @@ import Testing
 @Test func sweeplinePhotoRoundTripsUnixExpiry() throws {
   let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
   let data = Data(
-    #"{"image-hash":"\#(imageHash)","memo":"Delivery confirmation","byte-count":42000,"download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
+    #"{"image-hash":"\#(imageHash)","memo":"Delivery confirmation","byte-count":42000,"media-type":"image/jpeg","download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
   )
 
   let photo = try JSONDecoder().decode(SweeplinePhoto.self, from: data)
@@ -95,6 +98,7 @@ import Testing
   #expect(photo.imageHash == imageHash)
   #expect(photo.memo == "Delivery confirmation")
   #expect(photo.byteCount == 42_000)
+  #expect(photo.mediaType == "image/jpeg")
   #expect(photo.downloadURL.absoluteString == "https://uploads.example/image")
   #expect(photo.goodUntil == 1_800_000_000)
 }
@@ -104,6 +108,7 @@ import Testing
   let photo = try SweeplinePhoto(
     imageHash: imageHash,
     byteCount: 42_000,
+    mediaType: "image/jpeg",
     downloadURL: try #require(URL(string: "https://uploads.example/image")),
     goodUntil: 1_800_000_000
   )
@@ -150,6 +155,7 @@ import Testing
   let photo = try SweeplinePhoto(
     imageHash: request.imageHash,
     byteCount: request.byteCount,
+    mediaType: "image/jpeg",
     downloadURL: response.assetURL,
     goodUntil: response.goodUntil
   )
@@ -203,6 +209,7 @@ import Testing
         imageHash: imageHash,
         memo: "Invalid hash",
         byteCount: 42_000,
+        mediaType: "image/jpeg",
         downloadURL: downloadURL,
         goodUntil: 1_800_000_000
       )
@@ -216,6 +223,23 @@ import Testing
     ])
     #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(SweeplinePhoto.self, from: data)
+    }
+  }
+}
+
+@Test func sweeplinePhotoRejectsInvalidMediaTypes() throws {
+  let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+  let downloadURL = try #require(URL(string: "https://uploads.example/image"))
+
+  for mediaType in ["", "image", "image/jpeg; charset=binary", "IMAGE/JPEG", "image//jpeg"] {
+    #expect(throws: SweeplinePhotoError.invalidMediaType(mediaType)) {
+      try SweeplinePhoto(
+        imageHash: imageHash,
+        byteCount: 42_000,
+        mediaType: mediaType,
+        downloadURL: downloadURL,
+        goodUntil: 1_800_000_000
+      )
     }
   }
 }

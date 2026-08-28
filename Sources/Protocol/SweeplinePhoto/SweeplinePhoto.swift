@@ -4,9 +4,9 @@ public import struct Foundation.URL
 /// An invitation for a server to download an image.
 ///
 /// This value is carried by a signed Sweepline message. The image bytes are
-/// not part of this payload. `imageHash` identifies the expected bytes at
-/// `downloadURL`, and `goodUntil` is the Unix timestamp, in seconds, through
-/// which the URL should be considered usable.
+/// not part of this payload. `imageHash` and `mediaType` identify the expected
+/// bytes at `downloadURL`, and `goodUntil` is the Unix timestamp, in seconds,
+/// through which the URL should be considered usable.
 public struct SweeplinePhoto: Codable, Hashable, Sendable {
   public static let imageHashPrefix = "sha256:"
 
@@ -19,6 +19,9 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
   /// Size of the image bytes, in bytes.
   public let byteCount: Int64
 
+  /// Lowercase Internet media type of the image bytes, without parameters.
+  public let mediaType: String
+
   public let downloadURL: URL
   public let goodUntil: Int64
   
@@ -26,6 +29,7 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     imageHash: String,
     memo: String? = nil,
     byteCount: Int64,
+    mediaType: String,
     downloadURL: URL,
     goodUntil: Int64
   ) throws {
@@ -35,10 +39,14 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     guard byteCount >= 0 else {
       throw SweeplinePhotoError.invalidByteCount(byteCount)
     }
+    guard Self.isValidMediaType(mediaType) else {
+      throw SweeplinePhotoError.invalidMediaType(mediaType)
+    }
 
     self.imageHash = imageHash
     self.memo = memo
     self.byteCount = byteCount
+    self.mediaType = mediaType
     self.downloadURL = downloadURL
     self.goodUntil = goodUntil
   }
@@ -47,6 +55,7 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     case imageHash = "image-hash"
     case memo
     case byteCount = "byte-count"
+    case mediaType = "media-type"
     case downloadURL = "download-url"
     case goodUntil = "good-until"
   }
@@ -71,10 +80,19 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
         debugDescription: "byte-count must not be negative."
       )
     }
+    let mediaType = try container.decode(String.self, forKey: .mediaType)
+    guard Self.isValidMediaType(mediaType) else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .mediaType,
+        in: container,
+        debugDescription: "media-type must be a lowercase, parameter-free Internet media type."
+      )
+    }
 
     self.imageHash = imageHash
     self.memo = try container.decodeIfPresent(String.self, forKey: .memo)
     self.byteCount = byteCount
+    self.mediaType = mediaType
     self.downloadURL = try container.decode(URL.self, forKey: .downloadURL)
     self.goodUntil = try container.decode(Int64.self, forKey: .goodUntil)
   }
@@ -89,11 +107,22 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
       "0123456789abcdef".contains(character)
     }
   }
+
+  static func isValidMediaType(_ mediaType: String) -> Bool {
+    let parts = mediaType.split(separator: "/", omittingEmptySubsequences: false)
+    guard parts.count == 2 else { return false }
+
+    let tokenCharacters = Set("abcdefghijklmnopqrstuvwxyz0123456789!#$&^_.+-")
+    return parts.allSatisfy { part in
+      !part.isEmpty && part.allSatisfy { tokenCharacters.contains($0) }
+    }
+  }
 }
 
 public enum SweeplinePhotoError: Error, Hashable, Sendable {
   case invalidImageHash(String)
   case invalidByteCount(Int64)
+  case invalidMediaType(String)
 }
 
 public typealias SweeplinePhotoRequest = SweeplinePhoto
