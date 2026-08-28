@@ -111,16 +111,17 @@ import Testing
   #expect(try JSONDecoder().decode(SweeplinePhoto.self, from: data).memo == nil)
 }
 
-@Test func sweeplinePhotoStorageRequestEncodesImageHash() throws {
+@Test func sweeplinePhotoStorageRequestEncodesUploadMetadata() throws {
   let imageHash = "sha256:" + String(repeating: "0123456789abcdef", count: 4)
-  let request = try SweeplinePhotoStorageRequest(imageHash: imageHash)
+  let request = try SweeplinePhotoStorageRequest(imageHash: imageHash, byteCount: 42_000)
 
   let data = try JSONEncoder().encode(request)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
   #expect(object["image-hash"] as? String == imageHash)
+  #expect(object["byte-count"] as? Int64 == 42_000)
   #expect(object["good-until"] == nil)
-  #expect(object.count == 1)
+  #expect(object.count == 2)
   #expect(try JSONDecoder().decode(SweeplinePhotoStorageRequest.self, from: data) == request)
 }
 
@@ -136,7 +137,8 @@ import Testing
   #expect(object["good-until"] as? Int64 == 1_800_000_000)
 
   let request = try SweeplinePhotoStorageRequest(
-    imageHash: "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+    imageHash: "sha256:" + String(repeating: "abcdef0123456789", count: 4),
+    byteCount: 42_000
   )
   let photo = try SweeplinePhoto(
     imageHash: request.imageHash,
@@ -149,7 +151,8 @@ import Testing
 
 @Test func sweeplinePhotoStorageRequestUsesSweeplineSigningHeaders() throws {
   let request = try SweeplinePhotoStorageRequest(
-    imageHash: "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+    imageHash: "sha256:" + String(repeating: "abcdef0123456789", count: 4),
+    byteCount: 42_000
   )
   let body = try JSONEncoder().encode(request)
   let privateKey = Curve25519.Signing.PrivateKey()
@@ -166,6 +169,14 @@ import Testing
     body: signedRequest.body,
     signedMessage: signedRequest.signedMessage
   ))
+}
+
+@Test func sweeplinePhotoStorageRequestRejectsNegativeByteCount() {
+  let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
+
+  #expect(throws: SweeplinePhotoStorageRequestError.invalidByteCount(-1)) {
+    try SweeplinePhotoStorageRequest(imageHash: imageHash, byteCount: -1)
+  }
 }
 
 @Test func sweeplinePhotoRejectsNoncanonicalImageHashes() throws {

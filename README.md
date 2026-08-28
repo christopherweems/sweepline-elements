@@ -154,7 +154,7 @@ hexadecimal digits.
 ### Intermediary storage
 
 Use `SweeplinePhotoStorageRequest` when sending image bytes to an
-intermediary. It carries the `image-hash`; the intermediary assigns the
+intermediary. It carries the `image-hash` and `byte-count`; the intermediary assigns the
 `download-url` and `good-until` timestamp in a
 `SweeplinePhotoStorageResponse`. Combine those values with the request's hash
 to create and sign the `SweeplinePhoto` sent to the recipient.
@@ -164,7 +164,8 @@ standard `X-Sweepline-*` headers from `SweeplineSigning`:
 
 ```swift
 let storageRequest = try SweeplinePhotoStorageRequest(
-  imageHash: "sha256:<64 lowercase hexadecimal digits>"
+  imageHash: "sha256:<64 lowercase hexadecimal digits>",
+  byteCount: imageData.count
 )
 let body = try JSONEncoder().encode(storageRequest)
 let signature = try privateKey.signature(for: body)

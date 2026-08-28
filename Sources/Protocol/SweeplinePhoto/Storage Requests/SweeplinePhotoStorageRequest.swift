@@ -2,24 +2,32 @@ import struct Foundation.URL
 
 /// A request for an intermediary to retain image bytes for later delivery.
 ///
-/// The client uploads the image bytes separately. `imageHash` identifies those
-/// bytes. Once storage is accepted, the intermediary returns a
+/// The client uploads the image bytes separately. `imageHash` and `byteCount`
+/// identify those bytes. Once storage is accepted, the intermediary returns a
 /// `SweeplinePhotoStorageResponse` with the assigned download URL and expiry.
 
 public struct SweeplinePhotoStorageRequest: Codable, Hashable, Sendable {
   /// SHA-256 digest of the image bytes, encoded as lowercase hexadecimal.
   public let imageHash: String
 
-  public init(imageHash: String) throws {
+  /// Size of the requested upload, in bytes.
+  public let byteCount: Int64
+
+  public init(imageHash: String, byteCount: Int64) throws {
     guard SweeplinePhoto.isValidImageHash(imageHash) else {
       throw SweeplinePhotoError.invalidImageHash(imageHash)
     }
+    guard byteCount >= 0 else {
+      throw SweeplinePhotoStorageRequestError.invalidByteCount(byteCount)
+    }
 
     self.imageHash = imageHash
+    self.byteCount = byteCount
   }
 
   enum CodingKeys: String, CodingKey {
     case imageHash = "image-hash"
+    case byteCount = "byte-count"
   }
 
   public init(from decoder: Decoder) throws {
@@ -33,9 +41,23 @@ public struct SweeplinePhotoStorageRequest: Codable, Hashable, Sendable {
         debugDescription: "image-hash must be sha256: followed by exactly 64 lowercase hexadecimal digits."
       )
     }
+    let byteCount = try container.decode(Int64.self, forKey: .byteCount)
+
+    guard byteCount >= 0 else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .byteCount,
+        in: container,
+        debugDescription: "byte-count must not be negative."
+      )
+    }
 
     self.imageHash = imageHash
+    self.byteCount = byteCount
   }
+}
+
+public enum SweeplinePhotoStorageRequestError: Error, Hashable, Sendable {
+  case invalidByteCount(Int64)
 }
 
 
