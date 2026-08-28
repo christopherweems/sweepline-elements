@@ -58,6 +58,29 @@ import Testing
   #expect(object.count == 4)
 }
 
+@Test func sweeplinePhotoUsesSweeplineSigningHeaders() throws {
+  let photo = try SweeplinePhoto(
+    imageHash: "sha256:" + String(repeating: "0123456789abcdef", count: 4),
+    downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
+    goodUntil: 1_800_000_000
+  )
+  let body = try JSONEncoder().encode(photo)
+  let privateKey = Curve25519.Signing.PrivateKey()
+  let signature = try privateKey.signature(for: body)
+  let signedPhoto = SweeplineSigner.canonicalRequest(
+    body: body,
+    publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
+    signature: signature
+  )
+
+  #expect(signedPhoto.body == body)
+  #expect(signedPhoto.headers[SweeplineHeader.signature.rawValue] != nil)
+  #expect(try SweeplineVerifier().verify(
+    body: signedPhoto.body,
+    signedMessage: signedPhoto.signedMessage
+  ))
+}
+
 @Test func sweeplinePhotoRoundTripsUnixExpiry() throws {
   let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
   let data = Data(

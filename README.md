@@ -133,6 +133,20 @@ let photo = try SweeplinePhoto(
 )
 ```
 
+Upload the encoded photo payload as the exact body signed by the same key used
+for storage requests. Send the resulting `signedPhoto.headers` with
+`signedPhoto.body`:
+
+```swift
+let body = try JSONEncoder().encode(photo)
+let signature = try privateKey.signature(for: body)
+let signedPhoto = SweeplineSigner.canonicalRequest(
+  body: body,
+  publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
+  signature: signature
+)
+```
+
 `image-hash` is canonical and validated when constructing or decoding a
 `SweeplinePhoto`: it must be `sha256:` followed by exactly 64 lowercase
 hexadecimal digits.
