@@ -118,9 +118,9 @@ let message = BeeperMessage(
 
 `SweeplinePhoto` tells a server where to download an image instead of placing
 the image bytes in the signed request. Its JSON payload contains `image-hash`,
-an optional `memo`, `download-url`, and `good-until`; the latter is an integer Unix
-timestamp in seconds. The raw JSON body is signed using the standard `X-Sweepline-*`
-headers.
+an optional `memo`, `byte-count`, `download-url`, and `good-until`; the latter
+is an integer Unix timestamp in seconds. The raw JSON body is signed using the
+standard `X-Sweepline-*` headers.
 
 ```swift
 import SweeplinePhoto
@@ -128,6 +128,7 @@ import SweeplinePhoto
 let photo = try SweeplinePhoto(
   imageHash: "sha256:<64 lowercase hexadecimal digits>",
   memo: "Package front photo",
+  byteCount: imageData.count,
   downloadURL: URL(string: "https://example.com/image.jpg")!,
   goodUntil: 1_800_000_000
 )

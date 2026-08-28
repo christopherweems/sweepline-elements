@@ -44,6 +44,7 @@ import Testing
   let photo = try SweeplinePhoto(
     imageHash: imageHash,
     memo: "Package front photo",
+    byteCount: 42_000,
     downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
     goodUntil: 1_800_000_000
   )
@@ -53,14 +54,16 @@ import Testing
 
   #expect(object["image-hash"] as? String == imageHash)
   #expect(object["memo"] as? String == "Package front photo")
+  #expect(object["byte-count"] as? Int64 == 42_000)
   #expect(object["download-url"] as? String == "https://uploads.example/photo.jpg")
   #expect(object["good-until"] as? Int64 == 1_800_000_000)
-  #expect(object.count == 4)
+  #expect(object.count == 5)
 }
 
 @Test func sweeplinePhotoUsesSweeplineSigningHeaders() throws {
   let photo = try SweeplinePhoto(
     imageHash: "sha256:" + String(repeating: "0123456789abcdef", count: 4),
+    byteCount: 42_000,
     downloadURL: try #require(URL(string: "https://uploads.example/photo.jpg")),
     goodUntil: 1_800_000_000
   )
@@ -84,13 +87,14 @@ import Testing
 @Test func sweeplinePhotoRoundTripsUnixExpiry() throws {
   let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
   let data = Data(
-    #"{"image-hash":"\#(imageHash)","memo":"Delivery confirmation","download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
+    #"{"image-hash":"\#(imageHash)","memo":"Delivery confirmation","byte-count":42000,"download-url":"https://uploads.example/image","good-until":1800000000}"#.utf8
   )
 
   let photo = try JSONDecoder().decode(SweeplinePhoto.self, from: data)
 
   #expect(photo.imageHash == imageHash)
   #expect(photo.memo == "Delivery confirmation")
+  #expect(photo.byteCount == 42_000)
   #expect(photo.downloadURL.absoluteString == "https://uploads.example/image")
   #expect(photo.goodUntil == 1_800_000_000)
 }
@@ -99,6 +103,7 @@ import Testing
   let imageHash = "sha256:" + String(repeating: "abcdef0123456789", count: 4)
   let photo = try SweeplinePhoto(
     imageHash: imageHash,
+    byteCount: 42_000,
     downloadURL: try #require(URL(string: "https://uploads.example/image")),
     goodUntil: 1_800_000_000
   )
@@ -142,6 +147,7 @@ import Testing
   )
   let photo = try SweeplinePhoto(
     imageHash: request.imageHash,
+    byteCount: request.byteCount,
     downloadURL: response.downloadURL,
     goodUntil: response.goodUntil
   )
@@ -194,6 +200,7 @@ import Testing
       try SweeplinePhoto(
         imageHash: imageHash,
         memo: "Invalid hash",
+        byteCount: 42_000,
         downloadURL: downloadURL,
         goodUntil: 1_800_000_000
       )
@@ -201,6 +208,7 @@ import Testing
 
     let data = try JSONEncoder().encode([
       "image-hash": imageHash,
+      "byte-count": "42000",
       "download-url": downloadURL.absoluteString,
       "good-until": "1800000000",
     ])
