@@ -6,9 +6,9 @@ Primary modules:
 
 - `SweeplineSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction across `Sweepline`, `SweetfeetProtocol`, and `BeeperProtocol`.
 - `Sweepline` for gesture and interaction payloads.
+- `SweeplinePhoto` for signed, pull-based image delivery metadata.
 - `SweetfeetProtocol` for commerce and event payloads.
 - `BeeperProtocol` for minimal signed messages.
-- `SweeplinePhoto` for signed, pull-based image delivery metadata.
 
 Every protocol in the family is payload-agnostic at the signing layer: the signature covers the raw HTTP request body bytes, and protocol meaning lives entirely in the JSON body.
 
@@ -74,45 +74,6 @@ let headers = canonicalRequest.headers
 - `SweeplineResponse`
 - `SweeplineVerb`
 - `SweeplineVersion`
-
-## SweetfeetProtocol
-
-`SweetfeetProtocol` models signed commerce and event payloads:
-
-- `SweetfeetRequest`
-- `SweetfeetResponse`
-- `SweetfeetItemPriceCheckRequest`
-- `SweetfeetItemPriceCheckResponse`
-- `SweetfeetEventType`
-
-## BeeperProtocol
-
-`BeeperProtocol` models a minimal signed messaging payload with:
-
-- `title`
-- `topic`
-- `message`
-- `message-id`
-- `date`
-- `is-time-sensitive`
-
-It also provides `BeeperEnvelope`, `BeeperDeliveryMetadata`, and
-`SweeplineSignedArtifact` for transporting the exact signed request bytes through
-delivery systems such as APNS. Presentation metadata can be projected beside the
-envelope without altering the signed artifact.
-
-```swift
-import BeeperProtocol
-
-let message = BeeperMessage(
-  title: "Front desk",
-  topic: "arrival",
-  message: "Package waiting",
-  messageID: "beep-001",
-  date: Date(),
-  timeSensitive: true
-)
-```
 
 ## SweeplinePhoto
 
@@ -187,6 +148,45 @@ Before downloading the announced image, a receiving service must make an
 only when the response is `204 No Content` and includes `Sweepline-Photo: 1`.
 `SweeplinePhotoEndpoint.optionsRequest(for:)` constructs the check, and
 `SweeplinePhotoEndpoint.permitsDownload(_:)` validates its response.
+
+## SweetfeetProtocol
+
+`SweetfeetProtocol` models signed commerce and event payloads:
+
+- `SweetfeetRequest`
+- `SweetfeetResponse`
+- `SweetfeetItemPriceCheckRequest`
+- `SweetfeetItemPriceCheckResponse`
+- `SweetfeetEventType`
+
+## BeeperProtocol
+
+`BeeperProtocol` models a minimal signed messaging payload with:
+
+- `title`
+- `topic`
+- `message`
+- `message-id`
+- `date`
+- `is-time-sensitive`
+
+It also provides `BeeperEnvelope`, `BeeperDeliveryMetadata`, and
+`SweeplineSignedArtifact` for transporting the exact signed request bytes through
+delivery systems such as APNS. Presentation metadata can be projected beside the
+envelope without altering the signed artifact.
+
+```swift
+import BeeperProtocol
+
+let message = BeeperMessage(
+  title: "Front desk",
+  topic: "arrival",
+  message: "Package waiting",
+  messageID: "beep-001",
+  date: Date(),
+  timeSensitive: true
+)
+```
 
 ## Compatibility
 
