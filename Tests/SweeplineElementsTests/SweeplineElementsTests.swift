@@ -8,6 +8,7 @@ import Testing
 @testable import SweeplineElements
 @testable import SweeplineSigning
 
+/* Tests for the superseded split-upload SweeplinePhoto protocol.
 @Test func sweeplinePhotoEndpointRequiresExplicitOptionsOptIn() throws {
   let endpointURL = try #require(URL(string: "https://service.example/photos"))
   let request = SweeplinePhotoEndpoint.optionsRequest(for: endpointURL)
@@ -241,6 +242,72 @@ import Testing
         goodUntil: 1_800_000_000
       )
     }
+  }
+}
+
+*/
+
+private func photoAttestation(for description: SweeplinePhotoDescription) throws -> SweeplineSignedArtifact {
+  let key = Curve25519.Signing.PrivateKey()
+  let body = try JSONEncoder().encode(description)
+  let signedMessage = SweeplineSignedMessage(
+    publicKeyRawRepresentation: key.publicKey.rawRepresentation,
+    signature: try key.signature(for: body)
+  )
+  return SweeplineSignedArtifact(body: body, signedMessage: signedMessage)
+}
+
+@Test func sweeplinePhotoOptionsAdvertisesMaximumUploadByteCount() throws {
+  let endpointURL = try #require(URL(string: "https://service.example/photos"))
+  let request = SweeplinePhotoEndpoint.optionsRequest(for: endpointURL)
+  #expect(request.httpMethod == "OPTIONS")
+
+  for (value, expected) in [("42000", Int64(42_000)), ("0", Int64(0))] {
+    let response = try #require(HTTPURLResponse(
+      url: endpointURL, statusCode: 204, httpVersion: nil,
+      headerFields: [SweeplinePhotoEndpoint.maximumUploadSizeHeader: value]))
+    #expect(SweeplinePhotoEndpoint.maximumUploadSize(response) == expected)
+  }
+
+  for value in ["", "-1", "+1", "1.0", "unlimited", "9223372036854775808"] {
+    let response = try #require(HTTPURLResponse(
+      url: endpointURL, statusCode: 204, httpVersion: nil,
+      headerFields: [SweeplinePhotoEndpoint.maximumUploadSizeHeader: value]))
+    #expect(SweeplinePhotoEndpoint.maximumUploadSize(response) == nil)
+  }
+}
+
+@Test func sweeplinePhotoCarriesAttestedMetadataAndInlineData() throws {
+  let bytes = Data([0xff, 0xd8, 0xff])
+  let description = try SweeplinePhotoDescription(
+    imageHash: "sha256:" + String(repeating: "ab", count: 32),
+    memo: "Package front photo", byteCount: Int64(bytes.count), mediaType: "image/jpeg")
+  let photo = try SweeplinePhoto(
+    description: description, attestation: photoAttestation(for: description), imageData: bytes)
+
+  let data = try JSONEncoder().encode(photo)
+  let decoded = try JSONDecoder().decode(SweeplinePhoto.self, from: data)
+  #expect(decoded.description == description)
+  #expect(decoded.imageData == bytes)
+}
+
+@Test func sweeplinePhotoSupportsDescriptionOnlyForwarding() throws {
+  let description = try SweeplinePhotoDescription(
+    imageHash: "sha256:" + String(repeating: "cd", count: 32),
+    byteCount: 42_000, mediaType: "image/jpeg")
+  let photo = try SweeplinePhoto(
+    description: description, attestation: photoAttestation(for: description))
+
+  #expect(photo.imageData == nil)
+}
+
+@Test func sweeplinePhotoRejectsMismatchedInlineData() throws {
+  let description = try SweeplinePhotoDescription(
+    imageHash: "sha256:" + String(repeating: "ef", count: 32),
+    byteCount: 3, mediaType: "image/jpeg")
+  let attestation = try photoAttestation(for: description)
+  #expect(throws: SweeplinePhotoError.imageDataByteCountMismatch(expected: 3, actual: 2)) {
+    try SweeplinePhoto(description: description, attestation: attestation, imageData: Data([1, 2]))
   }
 }
 

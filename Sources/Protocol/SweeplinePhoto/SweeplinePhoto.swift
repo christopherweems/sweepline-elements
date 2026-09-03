@@ -1,120 +1,119 @@
 @_exported public import SweeplineSigning
-public import struct Foundation.URL
+public import Foundation
 
-/// An invitation for a server to download an image.
+/// The immutable image description attested to by a photo submitter.
 ///
-/// This value is carried by a signed Sweepline message. The image bytes are
-/// not part of this payload. `imageHash` and `mediaType` identify the expected
-/// bytes at `downloadURL`, and `goodUntil` is the Unix timestamp, in seconds,
-/// through which the URL should be considered usable.
-public struct SweeplinePhoto: Codable, Hashable, Sendable {
+/// The description, or its signed artifact, can be used as a cache key by a
+/// server that retains the corresponding image bytes.
+public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
   public static let imageHashPrefix = "sha256:"
-
-  /// SHA-256 digest of the image bytes, encoded as lowercase hexadecimal.
   public let imageHash: String
-
-  /// A human-readable note accompanying the image.
   public let memo: String?
-
-  /// Size of the image bytes, in bytes.
   public let byteCount: Int64
-
-  /// Lowercase Internet media type of the image bytes, without parameters.
   public let mediaType: String
 
-  public let downloadURL: URL
-  public let goodUntil: Int64
-  
-  public init(
-    imageHash: String,
-    memo: String? = nil,
-    byteCount: Int64,
-    mediaType: String,
-    downloadURL: URL,
-    goodUntil: Int64
-  ) throws {
-    guard Self.isValidImageHash(imageHash) else {
-      throw SweeplinePhotoError.invalidImageHash(imageHash)
-    }
-    guard byteCount >= 0 else {
-      throw SweeplinePhotoError.invalidByteCount(byteCount)
-    }
-    guard Self.isValidMediaType(mediaType) else {
-      throw SweeplinePhotoError.invalidMediaType(mediaType)
-    }
-
+  public init(imageHash: String, memo: String? = nil, byteCount: Int64, mediaType: String) throws {
+    guard Self.isValidImageHash(imageHash) else { throw SweeplinePhotoError.invalidImageHash(imageHash) }
+    guard 0 <= byteCount else { throw SweeplinePhotoError.invalidByteCount(byteCount) }
+    guard Self.isValidMediaType(mediaType) else { throw SweeplinePhotoError.invalidMediaType(mediaType) }
     self.imageHash = imageHash
     self.memo = memo
     self.byteCount = byteCount
     self.mediaType = mediaType
-    self.downloadURL = downloadURL
-    self.goodUntil = goodUntil
   }
-  
+
   enum CodingKeys: String, CodingKey {
     case imageHash = "image-hash"
     case memo
     case byteCount = "byte-count"
     case mediaType = "media-type"
-    case downloadURL = "download-url"
-    case goodUntil = "good-until"
   }
 
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let imageHash = try container.decode(String.self, forKey: .imageHash)
-
     guard Self.isValidImageHash(imageHash) else {
-      throw DecodingError.dataCorruptedError(
-        forKey: .imageHash,
-        in: container,
-        debugDescription: "image-hash must be sha256: followed by exactly 64 lowercase hexadecimal digits."
-      )
+      throw DecodingError.dataCorruptedError(forKey: .imageHash, in: container,
+        debugDescription: "image-hash must be sha256: followed by exactly 64 lowercase hexadecimal digits.")
     }
     let byteCount = try container.decode(Int64.self, forKey: .byteCount)
-
     guard byteCount >= 0 else {
-      throw DecodingError.dataCorruptedError(
-        forKey: .byteCount,
-        in: container,
-        debugDescription: "byte-count must not be negative."
-      )
+      throw DecodingError.dataCorruptedError(forKey: .byteCount, in: container,
+        debugDescription: "byte-count must not be negative.")
     }
     let mediaType = try container.decode(String.self, forKey: .mediaType)
     guard Self.isValidMediaType(mediaType) else {
-      throw DecodingError.dataCorruptedError(
-        forKey: .mediaType,
-        in: container,
-        debugDescription: "media-type must be a lowercase, parameter-free Internet media type."
-      )
+      throw DecodingError.dataCorruptedError(forKey: .mediaType, in: container,
+        debugDescription: "media-type must be a lowercase, parameter-free Internet media type.")
     }
-
     self.imageHash = imageHash
     self.memo = try container.decodeIfPresent(String.self, forKey: .memo)
     self.byteCount = byteCount
     self.mediaType = mediaType
-    self.downloadURL = try container.decode(URL.self, forKey: .downloadURL)
-    self.goodUntil = try container.decode(Int64.self, forKey: .goodUntil)
   }
 
-  static func isValidImageHash(_ imageHash: String) -> Bool {
-    guard imageHash.hasPrefix(imageHashPrefix) else {
-      return false
-    }
-
-    let digest = imageHash.dropFirst(imageHashPrefix.count)
-    return digest.count == 64 && digest.allSatisfy { character in
-      "0123456789abcdef".contains(character)
-    }
+  static func isValidImageHash(_ value: String) -> Bool {
+    guard value.hasPrefix(imageHashPrefix) else { return false }
+    let digest = value.dropFirst(imageHashPrefix.count)
+    return digest.count == 64 && digest.allSatisfy { "0123456789abcdef".contains($0) }
   }
 
-  static func isValidMediaType(_ mediaType: String) -> Bool {
-    let parts = mediaType.split(separator: "/", omittingEmptySubsequences: false)
+  static func isValidMediaType(_ value: String) -> Bool {
+    let parts = value.split(separator: "/", omittingEmptySubsequences: false)
     guard parts.count == 2 else { return false }
+    let allowed = Set("abcdefghijklmnopqrstuvwxyz0123456789!#$&^_.+-")
+    return parts.allSatisfy { !$0.isEmpty && $0.allSatisfy(allowed.contains) }
+  }
+}
 
-    let tokenCharacters = Set("abcdefghijklmnopqrstuvwxyz0123456789!#$&^_.+-")
-    return parts.allSatisfy { part in
-      !part.isEmpty && part.allSatisfy { tokenCharacters.contains($0) }
+/// A photo POST containing an attested description and optional inline bytes.
+///
+/// The attestation signs the canonical encoding of `description`. A server that
+/// accepts and stores `imageData` can forward the same description and
+/// attestation to a nested endpoint. When that endpoint advertises a maximum
+/// size of zero, the forwarded request omits `imageData`; the nested server can
+/// use the description or attestation as a cache key if it retrieves the bytes
+/// from the collecting server later.
+public struct SweeplinePhoto: Codable, Hashable, Sendable {
+  public let description: SweeplinePhotoDescription
+  public let attestation: SweeplineSignedArtifact
+  public let imageData: Data?
+
+  public init(
+    description: SweeplinePhotoDescription,
+    attestation: SweeplineSignedArtifact,
+    imageData: Data? = nil
+  ) throws {
+    guard let attestedDescriptionData = attestation.body,
+      let attestedDescription = try? JSONDecoder().decode(
+        SweeplinePhotoDescription.self, from: attestedDescriptionData),
+      attestedDescription == description
+    else { throw SweeplinePhotoError.attestationDescriptionMismatch }
+    if let imageData, Int64(imageData.count) != description.byteCount {
+      throw SweeplinePhotoError.imageDataByteCountMismatch(
+        expected: description.byteCount, actual: Int64(imageData.count))
+    }
+    self.description = description
+    self.attestation = attestation
+    self.imageData = imageData
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case description
+    case attestation
+    case imageData = "image-data"
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let description = try container.decode(SweeplinePhotoDescription.self, forKey: .description)
+    let attestation = try container.decode(SweeplineSignedArtifact.self, forKey: .attestation)
+    let imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+    do {
+      try self.init(description: description, attestation: attestation, imageData: imageData)
+    } catch {
+      throw DecodingError.dataCorruptedError(forKey: .attestation, in: container,
+        debugDescription: "The attestation must contain this photo description; inline data must match its byte count.")
     }
   }
 }
@@ -123,6 +122,6 @@ public enum SweeplinePhotoError: Error, Hashable, Sendable {
   case invalidImageHash(String)
   case invalidByteCount(Int64)
   case invalidMediaType(String)
+  case attestationDescriptionMismatch
+  case imageDataByteCountMismatch(expected: Int64, actual: Int64)
 }
-
-public typealias SweeplinePhotoRequest = SweeplinePhoto

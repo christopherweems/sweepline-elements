@@ -6,7 +6,7 @@ Primary modules:
 
 - `SweeplineSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction across `Sweepline`, `SweetfeetProtocol`, and `BeeperProtocol`.
 - `Sweepline` for gesture and interaction payloads.
-- `SweeplinePhoto` for signed, pull-based image delivery metadata.
+- `SweeplinePhoto` for attested image descriptions and optional inline delivery.
 - `SweetfeetProtocol` for commerce and event payloads.
 - `BeeperProtocol` for minimal signed messages.
 
@@ -77,35 +77,32 @@ let headers = canonicalRequest.headers
 
 ## SweeplinePhoto
 
-`SweeplinePhoto` tells a server where to download an image instead of placing
-the image bytes in the signed request. Its JSON payload contains `image-hash`,
-an optional `memo`, `byte-count`, `download-url`, and `good-until`; the latter
-is an integer Unix timestamp in seconds. The raw JSON body is signed using the
-standard `X-Sweepline-*` headers.
+`SweeplinePhoto` is a single POST envelope containing an image description,
+the submitter's attestation of that description, and optional image bytes.
 
 ```swift
 import SweeplinePhoto
 
-let photo = try SweeplinePhoto(
+let description = try SweeplinePhotoDescription(
   imageHash: "sha256:<64 lowercase hexadecimal digits>",
-  memo: "Package front photo",
-  byteCount: imageData.count,
-  downloadURL: URL(string: "https://example.com/image.jpg")!,
-  goodUntil: 1_800_000_000
+  memo: "A field of sunflowers below a blue sky",
+  byteCount: Int64(imageData.count),
+  mediaType: "image/jpeg"
 )
-```
-
-Upload the encoded photo payload as the exact body signed by the same key used
-for storage requests. Send the resulting `signedPhoto.headers` with
-`signedPhoto.body`:
-
-```swift
-let body = try JSONEncoder().encode(photo)
-let signature = try privateKey.signature(for: body)
-let signedPhoto = SweeplineSigner.canonicalRequest(
-  body: body,
+let descriptionBody = try JSONEncoder().encode(description)
+let signature = try privateKey.signature(for: descriptionBody)
+let signedMessage = SweeplineSigner.signedMessage(
   publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
   signature: signature
+)
+let attestation = SweeplineSignedArtifact(
+  body: descriptionBody,
+  signedMessage: signedMessage
+)
+let photo = try SweeplinePhoto(
+  description: description,
+  attestation: attestation,
+  imageData: imageData
 )
 ```
 
@@ -113,41 +110,20 @@ let signedPhoto = SweeplineSigner.canonicalRequest(
 `SweeplinePhoto`: it must be `sha256:` followed by exactly 64 lowercase
 hexadecimal digits.
 
-### Intermediary storage
+Before POSTing, query the endpoint with `OPTIONS`. A `204 No Content` response
+uses `Sweepline-Photo-Max-Size` as a decimal maximum raw-image byte count. A
+value of zero means the endpoint accepts the description and its attestation,
+but no inline `image-data`.
 
-Use `SweeplinePhotoStorageRequest` when sending image bytes to an
-intermediary. It carries the `image-hash` and `byte-count`; the intermediary assigns the
-`asset-url`, `asset-upload-good-until`, and `good-until` timestamps in a
-`SweeplinePhotoStorageResponse`. The client must `POST` the image bytes to the
-asset URL before `asset-upload-good-until`; the same URL serves the hosted asset
-through `GET`. Combine that URL, the request's hash and byte count, and the
-response's `good-until` to create and sign the `SweeplinePhoto` sent to the
-recipient.
+A front-end server can accept and retain the bytes, then notify a nested
+SweeplinePhoto endpoint by forwarding the same description and attestation in
+a new request without the bytes. The nested server can use either the
+description or its attestation as a cache key when asking the front-end server
+for the image later. That retrieval mechanism is deliberately outside the
+SweeplinePhoto protocol and can be implemented ad hoc.
 
-The encoded storage request is itself signed as the exact HTTP body using the
-standard `X-Sweepline-*` headers from `SweeplineSigning`:
-
-```swift
-let storageRequest = try SweeplinePhotoStorageRequest(
-  imageHash: "sha256:<64 lowercase hexadecimal digits>",
-  byteCount: imageData.count
-)
-let body = try JSONEncoder().encode(storageRequest)
-let signature = try privateKey.signature(for: body)
-let signedRequest = SweeplineSigner.canonicalRequest(
-  body: body,
-  publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
-  signature: signature
-)
-
-// Send `signedRequest.body` and `signedRequest.headers` to the intermediary.
-```
-
-Before downloading the announced image, a receiving service must make an
-`OPTIONS` request to its SweeplinePhoto endpoint. It may download the image
-only when the response is `204 No Content` and includes `Sweepline-Photo: 1`.
-`SweeplinePhotoEndpoint.optionsRequest(for:)` constructs the check, and
-`SweeplinePhotoEndpoint.permitsDownload(_:)` validates its response.
+`SweeplinePhotoEndpoint.optionsRequest(for:)` constructs the request and
+`maximumUploadSize(_:)` parses the response.
 
 ## SweetfeetProtocol
 
