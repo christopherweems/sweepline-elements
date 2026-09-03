@@ -9,7 +9,7 @@ public enum SweeplinePhotoEndpoint {
   ///
   /// Zero permits description-and-attestation-only posts, including forwarded
   /// notifications from a server retaining the image bytes.
-  public static let maximumUploadSizeHeader = "Sweepline-Photo-Max-Size"
+  public static let maximumUploadSizeHeader = "Sweepline-Photo-Max-Bytes"
 
   public static func optionsRequest(for endpointURL: URL) -> URLRequest {
     var request = URLRequest(url: endpointURL)

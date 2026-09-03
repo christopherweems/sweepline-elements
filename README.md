@@ -111,7 +111,7 @@ let photo = try SweeplinePhoto(
 hexadecimal digits.
 
 Before POSTing, query the endpoint with `OPTIONS`. A `204 No Content` response
-uses `Sweepline-Photo-Max-Size` as a decimal maximum raw-image byte count. A
+uses `Sweepline-Photo-Max-Bytes` as a decimal maximum raw-image byte count. A
 value of zero means the endpoint accepts the description and its attestation,
 but no inline `image-data`.
 
