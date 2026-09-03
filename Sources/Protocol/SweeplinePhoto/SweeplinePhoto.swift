@@ -9,15 +9,23 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
   public static let imageHashPrefix = "sha256:"
   public let imageHash: String
   public let memo: String?
+  public let senderID: String?
   public let byteCount: Int64
   public let mediaType: String
 
-  public init(imageHash: String, memo: String? = nil, byteCount: Int64, mediaType: String) throws {
+  public init(
+    imageHash: String,
+    memo: String? = nil,
+    senderID: String? = nil,
+    byteCount: Int64,
+    mediaType: String
+  ) throws {
     guard Self.isValidImageHash(imageHash) else { throw SweeplinePhotoError.invalidImageHash(imageHash) }
     guard 0 <= byteCount else { throw SweeplinePhotoError.invalidByteCount(byteCount) }
     guard Self.isValidMediaType(mediaType) else { throw SweeplinePhotoError.invalidMediaType(mediaType) }
     self.imageHash = imageHash
     self.memo = memo
+    self.senderID = senderID
     self.byteCount = byteCount
     self.mediaType = mediaType
   }
@@ -25,6 +33,7 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
   enum CodingKeys: String, CodingKey {
     case imageHash = "image-hash"
     case memo
+    case senderID = "sender-id"
     case byteCount = "byte-count"
     case mediaType = "media-type"
   }
@@ -48,6 +57,7 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
     }
     self.imageHash = imageHash
     self.memo = try container.decodeIfPresent(String.self, forKey: .memo)
+    self.senderID = try container.decodeIfPresent(String.self, forKey: .senderID)
     self.byteCount = byteCount
     self.mediaType = mediaType
   }
@@ -77,11 +87,13 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
 public struct SweeplinePhoto: Codable, Hashable, Sendable {
   public let description: SweeplinePhotoDescription
   public let attestation: SweeplineSignedArtifact
+  public let zoneID: String?
   public let imageData: Data?
 
   public init(
     description: SweeplinePhotoDescription,
     attestation: SweeplineSignedArtifact,
+    zoneID: String? = nil,
     imageData: Data? = nil
   ) throws {
     guard let attestedDescriptionData = attestation.body,
@@ -95,12 +107,14 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     }
     self.description = description
     self.attestation = attestation
+    self.zoneID = zoneID
     self.imageData = imageData
   }
 
   enum CodingKeys: String, CodingKey {
     case description
     case attestation
+    case zoneID = "zone-id"
     case imageData = "image-data"
   }
 
@@ -108,9 +122,15 @@ public struct SweeplinePhoto: Codable, Hashable, Sendable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let description = try container.decode(SweeplinePhotoDescription.self, forKey: .description)
     let attestation = try container.decode(SweeplineSignedArtifact.self, forKey: .attestation)
+    let zoneID = try container.decodeIfPresent(String.self, forKey: .zoneID)
     let imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
     do {
-      try self.init(description: description, attestation: attestation, imageData: imageData)
+      try self.init(
+        description: description,
+        attestation: attestation,
+        zoneID: zoneID,
+        imageData: imageData
+      )
     } catch {
       throw DecodingError.dataCorruptedError(forKey: .attestation, in: container,
         debugDescription: "The attestation must contain this photo description; inline data must match its byte count.")

@@ -86,6 +86,7 @@ import SweeplinePhoto
 let description = try SweeplinePhotoDescription(
   imageHash: "sha256:<64 lowercase hexadecimal digits>",
   memo: "A field of sunflowers below a blue sky",
+  senderID: "tony-fresh",
   byteCount: Int64(imageData.count),
   mediaType: "image/jpeg"
 )
@@ -102,6 +103,7 @@ let attestation = SweeplineSignedArtifact(
 let photo = try SweeplinePhoto(
   description: description,
   attestation: attestation,
+  zoneID: "basement-door",
   imageData: imageData
 )
 ```

@@ -281,13 +281,22 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let bytes = Data([0xff, 0xd8, 0xff])
   let description = try SweeplinePhotoDescription(
     imageHash: "sha256:" + String(repeating: "ab", count: 32),
-    memo: "Package front photo", byteCount: Int64(bytes.count), mediaType: "image/jpeg")
+    memo: "Package front photo", senderID: "courier-17",
+    byteCount: Int64(bytes.count), mediaType: "image/jpeg")
   let photo = try SweeplinePhoto(
-    description: description, attestation: photoAttestation(for: description), imageData: bytes)
+    description: description, attestation: photoAttestation(for: description),
+    zoneID: "receiving-dock", imageData: bytes)
 
   let data = try JSONEncoder().encode(photo)
+  let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+  let encodedDescription = try #require(object["description"] as? [String: Any])
+  #expect(encodedDescription["sender-id"] as? String == "courier-17")
+  #expect(encodedDescription["zone-id"] == nil)
+  #expect(object["zone-id"] as? String == "receiving-dock")
   let decoded = try JSONDecoder().decode(SweeplinePhoto.self, from: data)
   #expect(decoded.description == description)
+  #expect(decoded.description.senderID == "courier-17")
+  #expect(decoded.zoneID == "receiving-dock")
   #expect(decoded.imageData == bytes)
 }
 
