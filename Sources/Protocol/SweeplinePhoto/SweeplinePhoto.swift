@@ -10,6 +10,8 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
   public let imageHash: String
   public let memo: String?
   public let senderID: String?
+  /// The time at which the photo was described as taken, as Unix seconds since 1970.
+  public let timestamp: Int64
   public let byteCount: Int64
   public let mediaType: String
 
@@ -17,6 +19,7 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
     imageHash: String,
     memo: String? = nil,
     senderID: String? = nil,
+    timestamp: Int64,
     byteCount: Int64,
     mediaType: String
   ) throws {
@@ -26,6 +29,7 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
     self.imageHash = imageHash
     self.memo = memo
     self.senderID = senderID
+    self.timestamp = timestamp
     self.byteCount = byteCount
     self.mediaType = mediaType
   }
@@ -34,6 +38,7 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
     case imageHash = "image-hash"
     case memo
     case senderID = "sender-id"
+    case timestamp
     case byteCount = "byte-count"
     case mediaType = "media-type"
   }
@@ -58,6 +63,7 @@ public struct SweeplinePhotoDescription: Codable, Hashable, Sendable {
     self.imageHash = imageHash
     self.memo = try container.decodeIfPresent(String.self, forKey: .memo)
     self.senderID = try container.decodeIfPresent(String.self, forKey: .senderID)
+    self.timestamp = try container.decode(Int64.self, forKey: .timestamp)
     self.byteCount = byteCount
     self.mediaType = mediaType
   }

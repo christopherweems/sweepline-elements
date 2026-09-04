@@ -87,6 +87,7 @@ let description = try SweeplinePhotoDescription(
   imageHash: "sha256:<64 lowercase hexadecimal digits>",
   memo: "A field of sunflowers below a blue sky",
   senderID: "tony-fresh",
+  timestamp: 1_780_000_000,
   byteCount: Int64(imageData.count),
   mediaType: "image/jpeg"
 )
