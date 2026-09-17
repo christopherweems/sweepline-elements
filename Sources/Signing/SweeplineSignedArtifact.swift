@@ -1,6 +1,6 @@
 public import struct Foundation.Data
 
-/// The exact bytes and signature metadata received for a Sweepline-signed request.
+/// Durable signed bytes and their signature metadata, independent of HTTP authorization.
 ///
 /// `bodyBase64` deliberately preserves the original bytes instead of re-encoding a
 /// decoded payload, because even semantically equivalent JSON would invalidate the

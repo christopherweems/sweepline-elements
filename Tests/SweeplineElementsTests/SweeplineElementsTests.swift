@@ -82,7 +82,7 @@ import Testing
 
   #expect(signedPhoto.body == body)
   #expect(signedPhoto.headers[SweeplineHeader.signature.rawValue] != nil)
-  #expect(try SweeplineVerifier().verify(
+  #expect(try SweeplineVerifier().verifyArtifact(
     body: signedPhoto.body,
     signedMessage: signedPhoto.signedMessage
   ))
@@ -180,7 +180,7 @@ import Testing
 
   #expect(signedRequest.body == body)
   #expect(signedRequest.headers[SweeplineHeader.signature.rawValue] != nil)
-  #expect(try SweeplineVerifier().verify(
+  #expect(try SweeplineVerifier().verifyArtifact(
     body: signedRequest.body,
     signedMessage: signedRequest.signedMessage
   ))
@@ -368,19 +368,21 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   }
 }
 
-@Test func canonicalRequestUsesSweeplineHeaders() throws {
+@Test func signedArtifactPreservesBodyAndSignature() throws {
   let privateKey = Curve25519.Signing.PrivateKey()
   let body = Data("beep".utf8)
   let signature = try privateKey.signature(for: body)
 
-  let canonicalRequest = SweeplineSigner.canonicalRequest(
+  let artifact = SweeplineSignedArtifact(
     body: body,
-    publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
-    signature: signature
+    signedMessage: SweeplineSigner.signedMessage(
+      publicKeyRawRepresentation: privateKey.publicKey.rawRepresentation,
+      signature: signature
+    )
   )
 
-  #expect(canonicalRequest.body == body)
-  #expect(canonicalRequest.headers[SweeplineHeader.signature.rawValue] == signature.base64EncodedString())
+  #expect(artifact.body == body)
+  #expect(artifact.signedMessage.signatureBase64 == signature.base64EncodedString())
 }
 
 @Test func beeperMessageEncodesExpectedKeys() throws {
@@ -425,7 +427,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let decoded = try JSONDecoder().decode(BeeperEnvelope.self, from: encoded)
 
   #expect(decoded.artifact.body == body)
-  #expect(try SweeplineVerifier().verify(body: body, signedMessage: decoded.artifact.signedMessage))
+  #expect(try SweeplineVerifier().verifyArtifact(body: body, signedMessage: decoded.artifact.signedMessage))
 }
 
 @Test func verifiesValidSignature() throws {
@@ -440,7 +442,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   )
 
   let verifier = SweeplineVerifier()
-  let isValid = try verifier.verify(body: body, signedMessage: signedMessage)
+  let isValid = try verifier.verifyArtifact(body: body, signedMessage: signedMessage)
 
   #expect(isValid)
 }
@@ -478,7 +480,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
       SweeplineHeader.signature.rawValue:
         "kqAJqfDUyrhyDoILX2QlQKKye1QWUD+Ps3YiI+vbadoIWsHkPhWZbkWPNhPQ8R2MOHsurrQwKu6wDSkWErsMAA==",
     ])
-  #expect(try SweeplineVerifier().verify(body: bodyBytes, signedMessage: signedMessage))
+  #expect(try SweeplineVerifier().verifyArtifact(body: bodyBytes, signedMessage: signedMessage))
 }
 
 @Test func returnsVerificationResultForValidSignature() throws {
@@ -491,7 +493,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
     signature: signature
   )
 
-  let result = try SweeplineVerifier().verificationResult(
+  let result = try SweeplineVerifier().artifactVerificationResult(
     body: body,
     signedMessage: signedMessage
   )
@@ -511,8 +513,8 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   )
 
   let verifier = SweeplineVerifier()
-  let isValid = try verifier.verify(body: Data("mutated".utf8), signedMessage: signedMessage)
-  let result = try verifier.verificationResult(
+  let isValid = try verifier.verifyArtifact(body: Data("mutated".utf8), signedMessage: signedMessage)
+  let result = try verifier.artifactVerificationResult(
     body: Data("mutated".utf8), signedMessage: signedMessage)
 
   #expect(!isValid)
@@ -540,7 +542,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
       actual: mismatchedKeyID
     )
   ) {
-    try verifier.verify(body: body, signedMessage: signedMessage)
+    try verifier.verifyArtifact(body: body, signedMessage: signedMessage)
   }
 }
 

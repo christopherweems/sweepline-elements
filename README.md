@@ -1,16 +1,21 @@
 # sweepline-elements
 
-`sweepline-elements` is an umbrella Swift package for a family of signed protocols built on the same Ed25519 HTTP signing rules.
+`sweepline-elements` is an umbrella Swift package for a family of signed protocols built on Ed25519.
 
 Primary modules:
 
-- `SweeplineSigning` for shared signing, verification, key identifiers, HTTP signature headers, and canonical signed-request construction across `Sweepline`, `SweetfeetProtocol`, and `BeeperProtocol`.
+- `SweeplineSigning` for shared signing, verification, key identifiers, and HTTP authorization across `Sweepline`, `SweetfeetProtocol`, and `BeeperProtocol`.
 - `Sweepline` for gesture and interaction payloads.
 - `SweeplinePhoto` for attested image descriptions and optional inline delivery.
 - `SweetfeetProtocol` for commerce and event payloads.
 - `BeeperProtocol` for minimal signed messages.
 
-Every protocol in the family is payload-agnostic at the signing layer: the signature covers the raw HTTP request body bytes, and protocol meaning lives entirely in the JSON body.
+The signing layer is payload-agnostic. HTTP authorization binds the exact request
+context, body, timestamp, and nonce. Durable artifact signatures cover the original
+artifact bytes and remain verifiable after delivery.
+
+This is the unreleased **2.0.0** API. See [HTTP-SIGNING.md](HTTP-SIGNING.md) for the
+wire format, trust boundary, test vector, and migration requirements.
 
 ## Installation
 
@@ -33,11 +38,14 @@ Compatibility umbrella products remain available:
 - `SweeplineElements`
 - `SweetfeetElements`
 
-## Signing
+## HTTP authorization
 
-`SweeplineSigning` emits canonical `X-Sweepline-*` headers:
+HTTP format 2 adds three fields to the existing signature headers:
 
 ```http
+X-Sweepline-Version: 2
+X-Sweepline-Issued-At: <unix-seconds>
+X-Sweepline-Nonce: <32-lowercase-hex-digits>
 X-Sweepline-Signature-Algorithm: ed25519
 X-Sweepline-Key-ID: <16-character-key-id>
 X-Sweepline-Public-Key: <base64-raw-ed25519-public-key>
@@ -48,23 +56,51 @@ X-Sweepline-Signature: <base64-ed25519-signature>
 import Foundation
 import SweeplineSigning
 
-func verify(body: Data, headers: [String: String]) throws -> Bool {
-  let signedMessage = try SweeplineSignedMessage(headers: headers)
-  return try SweeplineVerifier().verify(body: body, signedMessage: signedMessage)
-}
+let request = try SweeplineHTTPRequest(
+  method: "POST",
+  url: "https://service.example/action",
+  contentType: "application/json"
+)
+let authorization = try SweeplineSigner.httpAuthorization(
+  request: request,
+  body: body,
+  issuedAt: Int64(Date().timeIntervalSince1970),
+  publicKey: privateKey.publicKey.rawRepresentation,
+  sign: privateKey.signature(for:)
+)
+// Send the same method, URL, content type, body, and authorization.headers.
 ```
 
-If you already have body bytes plus a public key and signature, you can construct a canonical signed request:
+On the server, construct `request` from the actual request and a trusted external
+origin. Pass original header pairs without first converting them to a dictionary:
 
 ```swift
-let canonicalRequest = SweeplineSigner.canonicalRequest(
+let authorization = try SweeplineHTTPAuthorization(headers: headerPairs)
+let verified = try SweeplineVerifier().verifyHTTP(
+  request: request,
   body: body,
-  publicKeyRawRepresentation: publicKeyData,
-  signature: signatureData
+  authorization: authorization,
+  now: Int64(Date().timeIntervalSince1970),
+  maximumAge: 300,
+  allowedFutureSkew: 30
 )
-
-let headers = canonicalRequest.headers
+// Check verified.keyID against the endpoint's authorization policy.
+// Atomically reserve (trusted audience, verified.keyID, verified.nonce),
+// retaining it until verified.validUntil, before issuing credentials or acting.
 ```
+
+`verifyHTTP` checks the signature and freshness. It has no replay store, clock,
+key allowlist, or application retry policy. The example's age and skew limits are
+service choices, not protocol constants. Never fall back to artifact verification
+when HTTP authorization fails.
+
+## Artifact signatures
+
+`SweeplineSigner.signedMessage` packages a signature over exact artifact bytes.
+`SweeplineVerifier.verifyArtifact(body:signedMessage:)` verifies those bytes without
+HTTP context or expiration. It is suitable for stored photo attestations and signed
+messages, not endpoint access. `SweeplineSignedArtifact` preserves those bytes and
+signature metadata for later verification.
 
 ## Sweepline
 

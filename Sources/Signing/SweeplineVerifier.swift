@@ -6,11 +6,12 @@ public struct SweeplineVerifier: Sendable {
 }
 
 extension SweeplineVerifier {
-  public func verify(body: Data, signedMessage: SweeplineSignedMessage) throws -> Bool {
-    try verificationResult(body: body, signedMessage: signedMessage) == .valid
+  /// Verifies durable signed bytes, not HTTP authorization or freshness.
+  public func verifyArtifact(body: Data, signedMessage: SweeplineSignedMessage) throws -> Bool {
+    try artifactVerificationResult(body: body, signedMessage: signedMessage) == .valid
   }
 
-  public func verificationResult(
+  public func artifactVerificationResult(
     body: Data,
     signedMessage: SweeplineSignedMessage
   ) throws(SweeplineVerificationError) -> SweeplineVerificationResult {
