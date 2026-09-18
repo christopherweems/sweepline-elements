@@ -1001,13 +1001,13 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 
 @Test func decodesTapResponseUsingContactMode() throws {
   let data = Data(
-    #"{"sweepline-version":"1.1","contact-mode":"tap","destination-url":"https://example.com/contact"}"#
+    #"{"sweepline-version":"2.0","contact-mode":"tap","destination-url":"https://example.com/contact"}"#
       .utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .tap)
   #expect(response.value == true)
   #expect(response.destinationURL == "https://example.com/contact")
@@ -1015,68 +1015,68 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 
 @Test func decodesYesResponseUsingIsYesKey() throws {
   let data = Data(
-    #"{"sweepline-version":"1.1","is-yes":true,"destination-url":"https://example.com/yes"}"#.utf8)
+    #"{"sweepline-version":"2.0","is-yes":true,"destination-url":"https://example.com/yes"}"#.utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .yes)
   #expect(response.value == true)
   #expect(response.destinationURL == "https://example.com/yes")
 }
 
 @Test func decodesYesResponseUsingMatchingContactModeAndIsYesKey() throws {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes","is-yes":false}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"yes","is-yes":false}"#.utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .yes)
   #expect(response.value == false)
 }
 
 @Test func decodesLaneOnlyYesResponse() throws {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes"}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"yes"}"#.utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .yes)
   #expect(response.value == nil)
 }
 
 @Test func decodesDownResponseUsingIsDownKey() throws {
-  let data = Data(#"{"sweepline-version":"1.1","is-down":false}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","is-down":false}"#.utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .down)
   #expect(response.value == false)
 }
 
 @Test func decodesDownResponseUsingMatchingContactModeAndIsDownKey() throws {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"down","is-down":true}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"down","is-down":true}"#.utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .down)
   #expect(response.value == true)
 }
 
 @Test func decodesLaneOnlyDownResponse() throws {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"down"}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"down"}"#.utf8)
   let decoder = JSONDecoder()
 
   let response = try decoder.decode(SweeplineResponse.self, from: data)
 
-  #expect(response.version == .v1_1)
+  #expect(response.version == .v2_0)
   #expect(response.contactMode == .down)
   #expect(response.value == nil)
 }
@@ -1091,7 +1091,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let data = try encoder.encode(response)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-  #expect(object["sweepline-version"] as? String == "1.1")
+  #expect(object["sweepline-version"] as? String == "2.0")
   #expect(object["is-yes"] as? Bool == true)
   #expect(object["is-down"] == nil)
   #expect(object["contact-mode"] == nil)
@@ -1109,7 +1109,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let data = try encoder.encode(response)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-  #expect(object["sweepline-version"] as? String == "1.1")
+  #expect(object["sweepline-version"] as? String == "2.0")
   #expect(object["contact-mode"] as? String == "tap")
   #expect(object["is-yes"] == nil)
   #expect(object["is-down"] == nil)
@@ -1123,7 +1123,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let data = try encoder.encode(response)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-  #expect(object["sweepline-version"] as? String == "1.1")
+  #expect(object["sweepline-version"] as? String == "2.0")
   #expect(object["is-down"] as? Bool == false)
   #expect(object["is-yes"] == nil)
   #expect(object["contact-mode"] == nil)
@@ -1137,7 +1137,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let data = try encoder.encode(response)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-  #expect(object["sweepline-version"] as? String == "1.1")
+  #expect(object["sweepline-version"] as? String == "2.0")
   #expect(object["contact-mode"] as? String == "yes")
   #expect(object["is-yes"] == nil)
   #expect(object["is-down"] == nil)
@@ -1149,14 +1149,14 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
   let data = try encoder.encode(response)
   let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-  #expect(object["sweepline-version"] as? String == "1.1")
+  #expect(object["sweepline-version"] as? String == "2.0")
   #expect(object["contact-mode"] as? String == "down")
   #expect(object["is-yes"] == nil)
   #expect(object["is-down"] == nil)
 }
 
 @Test func rejectsResponseMissingContactKey() {
-  let data = Data(#"{"sweepline-version":"1.1"}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0"}"#.utf8)
   let decoder = JSONDecoder()
 
   #expect(throws: DecodingError.self) {
@@ -1165,7 +1165,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 }
 
 @Test func rejectsResponseWithMultipleValueSpecifiers() {
-  let data = Data(#"{"sweepline-version":"1.1","is-yes":true,"is-down":false}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","is-yes":true,"is-down":false}"#.utf8)
   let decoder = JSONDecoder()
 
   #expect(throws: DecodingError.self) {
@@ -1174,7 +1174,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 }
 
 @Test func rejectsResponseWithMismatchedContactModeAndValueSpecifier() {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"yes","is-down":true}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"yes","is-down":true}"#.utf8)
   let decoder = JSONDecoder()
 
   #expect(throws: DecodingError.self) {
@@ -1183,7 +1183,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 }
 
 @Test func rejectsTapResponseWithValueSpecifier() {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap","is-yes":true}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"tap","is-yes":true}"#.utf8)
   let decoder = JSONDecoder()
 
   #expect(throws: DecodingError.self) {
@@ -1192,7 +1192,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 }
 
 @Test func rejectsResponseWithUnknownContactMode() {
-  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"maybe"}"#.utf8)
+  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"maybe"}"#.utf8)
   let decoder = JSONDecoder()
 
   #expect(throws: DecodingError.self) {
@@ -1201,7 +1201,7 @@ private func photoAttestation(for description: SweeplinePhotoDescription) throws
 }
 
 @Test func rejectsResponseWithUnknownSweeplineVersion() {
-  let data = Data(#"{"sweepline-version":"2.0","contact-mode":"tap"}"#.utf8)
+  let data = Data(#"{"sweepline-version":"1.1","contact-mode":"tap"}"#.utf8)
   let decoder = JSONDecoder()
 
   #expect(throws: DecodingError.self) {

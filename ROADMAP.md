@@ -16,10 +16,9 @@ SweeplineSigning layer.
 | HTTP authorization | 2 | Request-signing wire format in `X-Sweepline-Version` |
 | Individual payloads and envelopes | Independently versioned | Their wire versions do not automatically become 2.0.0 |
 
-Currently, `SweeplineVersion` exposes `1.1`, `SweetfeetVersion` exposes `0.1`,
-and `BeeperEnvelope.currentVersion` is `1`. Review and document these values
-before release; change a payload version only when its contract requires it.
-Do not substitute the app or package version into an HTTP or payload version field.
+`SweeplineVersion` exposes `2.0`. `SweetfeetVersion` remains `0.1`, and
+`BeeperEnvelope.currentVersion` remains `1`. Do not substitute the app or
+package version into an HTTP or payload version field.
 
 ## 1. Freeze the public contract
 

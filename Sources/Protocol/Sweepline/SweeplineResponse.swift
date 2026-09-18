@@ -7,7 +7,7 @@ public struct SweeplineResponse: Hashable, Sendable {
   public let destinationURL: String?
   
   public init(
-    version: SweeplineVersion = .v1_1,
+    version: SweeplineVersion = .v2_0,
     contactMode: SweeplineContactMode,
     value: Bool?,
     destinationURL: String? = nil,
