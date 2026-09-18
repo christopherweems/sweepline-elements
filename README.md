@@ -28,9 +28,9 @@ Products:
 ```swift
 .product(name: "SweeplineSigning", package: "sweepline-elements")
 .product(name: "Sweepline", package: "sweepline-elements")
+.product(name: "SweeplinePhoto", package: "sweepline-elements")
 .product(name: "SweetfeetProtocol", package: "sweepline-elements")
 .product(name: "BeeperProtocol", package: "sweepline-elements")
-.product(name: "SweeplinePhoto", package: "sweepline-elements")
 ```
 
 Compatibility umbrella products remain available:
