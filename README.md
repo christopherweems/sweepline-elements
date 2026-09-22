@@ -71,6 +71,20 @@ let authorization = try SweeplineSigner.httpAuthorization(
 // Send the same method, URL, content type, body, and authorization.headers.
 ```
 
+HTTPS is the default. For an HTTP endpoint protected by an equivalent private transport,
+such as WireGuard, explicitly opt in when constructing the signed context:
+
+```swift
+let request = try SweeplineHTTPRequest(
+  method: "POST",
+  url: "http://service.internal/action",
+  contentType: "application/json",
+  allowHTTP: true
+)
+```
+
+The service reconstructing that HTTP request context must also pass `allowHTTP: true`.
+
 On the server, construct `request` from the actual request and a trusted external
 origin. Pass original header pairs without first converting them to a dictionary:
 

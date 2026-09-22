@@ -140,7 +140,14 @@ private func verify(
 }
 
 @Test func httpRequestRejectsAmbiguousInput() throws {
-  for url in ["http://example.com/", "https://example.com", "https://example.com/#fragment",
+  #expect(throws: SweeplineHTTPAuthorizationError.invalidRequest) {
+    try SweeplineHTTPRequest(method: "GET", url: "http://example.com/")
+  }
+  #expect(try SweeplineHTTPRequest(
+    method: "GET", url: "http://example.com/", allowHTTP: true
+  ).url == "http://example.com/")
+
+  for url in ["https://example.com", "https://example.com/#fragment",
     "https://user:password@example.com/", "https://example.com/bad path", "https://example.com/%zz",
     "https://example.com:0/", "https://example.com:65536/", "https://example.com/\\path"] {
     #expect(throws: SweeplineHTTPAuthorizationError.invalidRequest) { try SweeplineHTTPRequest(method: "GET", url: url) }

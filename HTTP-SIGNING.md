@@ -30,11 +30,14 @@ Unrelated HTTP headers are ignored by the authorization parser.
 
 ## Request context
 
-`SweeplineHTTPRequest` holds the method, external absolute HTTPS URL, and optional
+`SweeplineHTTPRequest` holds the method, external absolute HTTP or HTTPS URL, and optional
 content type. These strings are signed exactly as supplied, without normalization.
 
 - Method is a nonempty HTTP token, at most 32 ASCII bytes, with case preserved.
-- URL is at most 8192 ASCII bytes, has scheme `https`, a nonempty host, an explicit
+- URL is at most 8192 ASCII bytes, has scheme `https` by default. An `http` URL requires
+  the client or service constructing the request context to pass `allowHTTP: true`; this
+  explicit opt-in is intended for routes with equivalent protection outside HTTP, such as
+  WireGuard. The URL has a nonempty host, an explicit
   path beginning with `/`, and an optional port in `1...65535`. Credentials,
   fragments, whitespace, backslashes, and malformed percent escapes are rejected.
   Use an ASCII hostname representation and percent-encoded paths/queries.
@@ -123,9 +126,11 @@ separate: they may persist across freshly authorized retries. Services must
 prevent repeated side effects through their own durable operation semantics and
 must not reissue bearer credentials to a replayed authorization.
 
-HTTPS remains required. A captured, unconsumed authorization can race its intended
-delivery; at most one copy can be admitted by the replay store. This protocol does
-not prevent theft of private keys or of browser bearer tokens.
+HTTPS is the default. HTTP must be explicitly enabled with `allowHTTP: true` for every
+request context and should only be used over a route that supplies equivalent transport
+protection, such as WireGuard. A captured, unconsumed authorization can race its intended
+delivery; at most one copy can be admitted by the replay store. This protocol does not
+prevent theft of private keys or of browser bearer tokens.
 
 ## Fixed vector
 
