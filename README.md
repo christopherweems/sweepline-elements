@@ -224,3 +224,22 @@ let message = BeeperMessage(
   and `SweeplinePhoto`.
 - `SweeplineElements` and `SweetfeetElements` remain available as umbrella products.
 - `Cashline*` aliases have been removed.
+
+## Protocol rejections
+
+Return `SweeplineErrorResponse` with a non-success HTTP status when rejecting a
+Sweepline request. For example, HTTP 409 with:
+
+```json
+{"sweepline-version":"2.0","sweepline-error":"replay-detected"}
+```
+
+The optional `message` supplies a human-readable explanation. Standard codes are
+`invalid-signature`, `replay-detected`, `expired`, `issued-in-future`,
+`unauthorized`, and `invalid-request`. Clients must preserve unknown error codes
+and recognize them as protocol rejections. An `X-Sweepline-Version` response
+header can identify protocol responses when no structured body is available.
+Rejections must not cause clients to retry through unsigned GET. A timeout or
+connection failure does not establish that an endpoint lacks protocol support.
+These errors report server decisions; they do not implement nonce reservation or
+key authorization policy.
